@@ -3,14 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Calculus;
 
 namespace Metodos
 {
-    internal class MetodosCerrados
+    public class MetodosCerrados
     {
+        public class ResultadoCalculo
+        {
+            public bool Exito { get; set; }
+            public string Mensaje { get; set; }
+            public double Raiz { get; set; }
+            public int IteracionesRealizadas { get; set; }
+            public double ErrorRelativo { get; set; }
+        }
         public delegate double Funcion(double x);
 
-        public static double CalcularXr(string metodo, Funcion f, double xi, double xd)
+        private static double CalcularXr(string metodo, Funcion f, double xi, double xd)
         {
             if (metodo.ToLower() == "biseccion")
             {
@@ -20,35 +29,38 @@ namespace Metodos
             {
                 return (f(xd) * xi - f(xi) * xd) / (f(xd) - f(xi));
             }
-            else
-            {
-                throw new ArgumentException("Método no válido. Usa 'biseccion' o 'regla_falsa'.");
-            }
+            throw new ArgumentException("Método no válido.");
         }
 
-        public static double AnalizarRaiz(Funcion f, int iteraciones, double tolerancia, double xi, double xd, string metodo)
+        public static ResultadoCalculo AnalizarRaiz(string funcionTexto, int iteraciones, double tolerancia, double xi, double xd, string metodo)
         {
-            // 1. Validar el intervalo inicial
+            // 1. INICIALIZAR LIBRERÍA CALCULUS
+            Calculo evaluador = new Calculo();
+
+            // Verificamos que la función matemática esté bien escrita.
+            // Asumimos que la variable es siempre 'x' (puedes cambiarlo si tu app usa otra letra).
+            if (!evaluador.Sintaxis(funcionTexto, 'x'))
+            {
+                return new ResultadoCalculo { Exito = false, Mensaje = "Error de sintaxis en la función ingresada. Revisa los operadores." };
+            }
+
+            // 2. CREAR NUESTRA "MÁQUINA" FUNCIONAL
+            // Envolvemos la librería Calculus en nuestro delegado para que sea súper rápido evaluarlo.
+            Funcion f = x => evaluador.EvaluaFx(x);
+
+
+            // 3. VALIDAR EL INTERVALO INICIAL
             if (f(xi) * f(xd) > 0)
             {
-                Console.WriteLine("Error: f(xi) y f(xd) tienen el mismo signo. No se garantiza una raíz.");
-                return double.NaN; // Retornamos "Not a Number" como indicador de error
+                return new ResultadoCalculo { Exito = false, Mensaje = "Error: f(xi) y f(xd) tienen el mismo signo. No hay garantía de raíz en este intervalo." };
             }
             else if (f(xi) * f(xd) == 0)
             {
-                if (f(xi) == 0)
-                {
-                    Console.WriteLine($"El valor xi ({xi}) es una raíz exacta.");
-                    return xi;
-                }
-                else
-                {
-                    Console.WriteLine($"El valor xd ({xd}) es una raíz exacta.");
-                    return xd;
-                }
+                double raizExacta = (f(xi) == 0) ? xi : xd;
+                return new ResultadoCalculo { Exito = true, Raiz = raizExacta, IteracionesRealizadas = 0, ErrorRelativo = 0, Mensaje = "Raíz exacta en los límites." };
             }
 
-            // 2. Bucle principal
+            // 4. BUCLE PRINCIPAL (Bisección o Regla Falsa)
             double xrAnterior = 0;
             double xr = 0;
             double error = 0;
@@ -57,7 +69,7 @@ namespace Metodos
             {
                 xr = CalcularXr(metodo, f, xi, xd);
 
-                // Calcular el error relativo (evitando división por cero)
+                // Calcular error relativo
                 if (xr != 0)
                 {
                     error = Math.Abs((xr - xrAnterior) / xr);
@@ -67,16 +79,20 @@ namespace Metodos
                     error = double.PositiveInfinity;
                 }
 
-                // Condición de corte: Tolerancia alcanzada
-                // Ignoramos la primera iteración para el error, ya que xrAnterior es 0
+                // Condición de corte
                 if (i > 1 && (Math.Abs(f(xr)) < tolerancia || error < tolerancia))
                 {
-                    Console.WriteLine($"✅ Raíz encontrada en la iteración {i}");
-                    Console.WriteLine($"Error final: {error:F6}");
-                    return xr;
+                    return new ResultadoCalculo
+                    {
+                        Exito = true,
+                        Raiz = xr,
+                        IteracionesRealizadas = i,
+                        ErrorRelativo = error,
+                        Mensaje = "Raíz encontrada."
+                    };
                 }
 
-                // Actualizar los límites del intervalo
+                // Actualizar límites
                 if (f(xi) * f(xr) > 0)
                 {
                     xi = xr;
@@ -89,9 +105,16 @@ namespace Metodos
                 xrAnterior = xr;
             }
 
-            // 3. Salida si supera las iteraciones
-            Console.WriteLine($"⚠️ Se superó el límite de {iteraciones} iteraciones.");
-            return xr;
+            // 5. SALIDA SI SUPERA ITERACIONES
+            return new ResultadoCalculo
+            {
+                Exito = false, // Lo marcamos como falso porque no alcanzó la tolerancia
+                Raiz = xr,
+                IteracionesRealizadas = iteraciones,
+                ErrorRelativo = error,
+                Mensaje = "Se superó el límite de iteraciones sin alcanzar la tolerancia deseada."
+            };
         }
     }
-}
+  }
+
