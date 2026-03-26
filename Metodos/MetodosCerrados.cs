@@ -9,14 +9,6 @@ namespace Metodos
 {
     public class MetodosCerrados
     {
-        public class ResultadoCalculo
-        {
-            public bool Exito { get; set; }
-            public string Mensaje { get; set; }
-            public double Raiz { get; set; }
-            public int IteracionesRealizadas { get; set; }
-            public double ErrorRelativo { get; set; }
-        }
         public delegate double Funcion(double x);
 
         private static double CalcularXr(string metodo, Funcion f, double xi, double xd)
@@ -32,7 +24,7 @@ namespace Metodos
             throw new ArgumentException("Método no válido.");
         }
 
-        public static ResultadoCalculo AnalizarRaiz(string funcionTexto, int iteraciones, double tolerancia, double xi, double xd, string metodo)
+        public static ResultadoMetodos AnalizarRaiz(string funcionTexto, int iteraciones, double tolerancia, double xi, double xd, string metodo)
         {
             // 1. INICIALIZAR LIBRERÍA CALCULUS
             Calculo evaluador = new Calculo();
@@ -41,7 +33,7 @@ namespace Metodos
             // Asumimos que la variable es siempre 'x' (puedes cambiarlo si tu app usa otra letra).
             if (!evaluador.Sintaxis(funcionTexto, 'x'))
             {
-                return new ResultadoCalculo { Exito = false, Mensaje = "Error de sintaxis en la función ingresada. Revisa los operadores." };
+                return new ResultadoMetodos { Exito = false, Mensaje = "Error de sintaxis en la función ingresada. Revisa los operadores." };
             }
 
             // 2. CREAR NUESTRA "MÁQUINA" FUNCIONAL
@@ -52,12 +44,12 @@ namespace Metodos
             // 3. VALIDAR EL INTERVALO INICIAL
             if (f(xi) * f(xd) > 0)
             {
-                return new ResultadoCalculo { Exito = false, Mensaje = "Error: f(xi) y f(xd) tienen el mismo signo. No hay garantía de raíz en este intervalo." };
+                return new ResultadoMetodos { Exito = false, Mensaje = "Error: f(xi) y f(xd) tienen el mismo signo. No hay garantía de raíz en este intervalo." };
             }
             else if (f(xi) * f(xd) == 0)
             {
                 double raizExacta = (f(xi) == 0) ? xi : xd;
-                return new ResultadoCalculo { Exito = true, Raiz = raizExacta, IteracionesRealizadas = 0, ErrorRelativo = 0, Mensaje = "Raíz exacta en los límites." };
+                return new ResultadoMetodos { Exito = true, Raiz = raizExacta, Iteraciones = 0, Error = 0, Mensaje = "Raíz exacta en los límites." };
             }
 
             // 4. BUCLE PRINCIPAL (Bisección o Regla Falsa)
@@ -82,12 +74,12 @@ namespace Metodos
                 // Condición de corte
                 if (i > 1 && (Math.Abs(f(xr)) < tolerancia || error < tolerancia))
                 {
-                    return new ResultadoCalculo
+                    return new ResultadoMetodos
                     {
                         Exito = true,
                         Raiz = xr,
-                        IteracionesRealizadas = i,
-                        ErrorRelativo = error,
+                        Iteraciones = i,
+                        Error = error,
                         Mensaje = "Raíz encontrada."
                     };
                 }
@@ -106,12 +98,12 @@ namespace Metodos
             }
 
             // 5. SALIDA SI SUPERA ITERACIONES
-            return new ResultadoCalculo
+            return new ResultadoMetodos
             {
                 Exito = false, // Lo marcamos como falso porque no alcanzó la tolerancia
                 Raiz = xr,
-                IteracionesRealizadas = iteraciones,
-                ErrorRelativo = error,
+                Iteraciones = iteraciones,
+                Error = error,
                 Mensaje = "Se superó el límite de iteraciones sin alcanzar la tolerancia deseada."
             };
         }

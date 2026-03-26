@@ -1,4 +1,4 @@
-﻿using TabajoAnalisisMatematico.Models;
+﻿
 using Calculus;
 
 namespace Metodos
@@ -7,13 +7,13 @@ namespace Metodos
     {
         public delegate double Funcion(double x);
 
-        public ResultadoMetodo Calcular(string metodo, Funcion funcion, double xi, double xd, int iteraciones, double tolerancia)
+        public ResultadoMetodos Calcular(string metodo, Funcion funcion, double xi, double xd, int iteraciones, double tolerancia)
         {
             if (Math.Abs(funcion(xi)) < tolerancia)
-                return new ResultadoMetodo { Raiz = xi };
+                return new ResultadoMetodos { Raiz = xi };
 
             if (metodo == "Secante" && Math.Abs(funcion(xd)) < tolerancia)
-                return new ResultadoMetodo { Raiz = xd };
+                return new ResultadoMetodos { Raiz = xd };
 
             double xr = 0;
             double xrAnterior = 0;
@@ -31,7 +31,7 @@ namespace Metodos
 
                 if (Math.Abs(funcion(xr)) < tolerancia || error < tolerancia)
                 {
-                    return new ResultadoMetodo
+                    return new ResultadoMetodos
                     {
                         Raiz = xr,
                         Error = error,
@@ -52,7 +52,7 @@ namespace Metodos
                 xrAnterior = xr;
             }
 
-            return new ResultadoMetodo
+            return new ResultadoMetodos
             {
                 Raiz = xr,
                 Error = error,
