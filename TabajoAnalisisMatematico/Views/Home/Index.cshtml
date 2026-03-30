@@ -1,8 +1,223 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿
+@model MetodosCerradoAbierto
+
+@{
+    ViewData["Title"] = "Raíces de Funciones";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    /* Estructura básica de grillas para replicar tu diseño de pantalla */
+    .app-container { display: grid; grid-template-columns: 280px 1fr; gap: 20px; padding: 20px; background-color: #f8f9fa; min-height: 100vh; }
+    .content-area { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+    
+    /* Contenedor listo para que le inyectes GeoGebra con JS */
+    .graph-container { min-height: 400px; width: 100%; border: 1px solid #dee2e6; border-radius: 0.375rem; background-color: #ffffff; }
+    #ggb-element { width: 100%; height: 100%; }
+</style>
+
+<div class="app-container">
+    
+    <div class="card p-3 shadow-sm border-0">
+        <div class="mb-3 d-flex gap-2">
+            <button class="btn btn-dark btn-sm">Unidad 1</button>
+        </div>
+
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link active text-dark fw-bold" href="#">Métodos cerrados</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-muted" href="#">Métodos abiertos</a>
+            </li>
+        </ul>
+
+        <div class="nav flex-column nav-pills">
+            <button class="nav-link active text-start mb-2" id="btn-biseccion">Bisección</button>
+            <button class="nav-link text-start text-dark bg-light border mb-2" id="btn-reglafalsa">Regla Falsa</button>
+        </div>
+    </div>
+
+    <div class="content-area">
+        
+        <div class="card p-4 shadow-sm border-0">
+            <form method="post" action="/MetodosCerrados/Cerrados">
+               <input type="hidden" name="MetodoElegido" id="hiddenMetodo" value="@(Model?.MetodoElegido ?? "biseccion")" />
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-0">Función</label>
+                    <input type="text" class="form-control bg-light" name="FuncionTexto" value="@Model?.FuncionTexto" placeholder="Ej: x^2 - 4" required>
+                    <small class="text-muted">Función a evaluar</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-0">Xi</label>
+                    <input type="number" step="any" class="form-control bg-light" name="Xi" value="@Model?.Xi" required>
+                    <small class="text-muted">Límite inferior</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-0">Xd</label>
+                    <input type="number" step="any" class="form-control bg-light" name="Xd" value="@Model?.Xd" required>
+                    <small class="text-muted">Límite superior</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-0">Iteraciones</label>
+                    <input type="number" class="form-control bg-light" name="IteracionesMaximas" value="@(Model?.IteracionesMaximas > 0 ? Model.IteracionesMaximas : 100)" required>
+                    <small class="text-muted">Número de iteraciones</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-0">Tolerancia</label>
+                    <input type="text" class="form-control bg-light" name="Tolerancia" value="@(Model?.Tolerancia > 0 ? Model.Tolerancia.ToString(System.Globalization.CultureInfo.InvariantCulture) : "0.0001")" required>
+                    <small class="text-muted">Tolerancia</small>
+                </div>
+
+                <button type="submit" class="btn btn-dark w-100 mt-3 py-2 fw-bold">CARGAR</button>
+            </form>
+        </div>
+
+       <div class="d-flex flex-column gap-3">
+            
+            @if (Model?.Resultado == null)
+            {
+                <div class="alert alert-secondary text-center shadow-sm border-0">
+                    <i class="bi bi-info-circle me-2"></i> Ingrese los parámetros y presione <strong>CARGAR</strong> para ver los resultados y la gráfica.
+                </div>
+            }
+            else if (!Model.Resultado.Exito)
+            {
+                <div class="alert alert-danger shadow-sm border-0">
+                    <strong>Error:</strong> @Model.Resultado.Mensaje
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-dark text-white text-center py-3">
+                        <h4 class="mb-0 font-monospace">Resultado</h4>
+                    </div>
+                    <div class="card-body px-4">
+                        
+                        <div class="d-flex justify-content-between align-items-end border-bottom pb-2 mb-3">
+                            <span class="fw-bold text-muted">Iteraciones</span>
+                            <span class="fs-5 fw-bold">@Model.Resultado.Iteraciones</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-end border-bottom pb-2 mb-3">
+                            <span class="fw-bold text-muted">Error relativo</span>
+                            <span class="fs-5 fw-bold">@Model.Resultado.Error.ToString("F8")</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-end">
+                            <span class="fw-bold text-muted">Raíz</span>
+                            <span class="fs-4 fw-bold text-primary">@Model.Resultado.Raiz.ToString("F6")</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="graph-container shadow-sm p-2 mt-2">
+                    <div id="ggb-element"></div>
+                </div>
+            }
+
+        </div>
+    </div>
 </div>
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // --- 1. Lógica de los botones del formulario ---
+        const btnBiseccion = document.getElementById('btn-biseccion');
+        const btnReglaFalsa = document.getElementById('btn-reglafalsa');
+        const hiddenMetodo = document.getElementById('hiddenMetodo');
+
+        if (btnBiseccion && btnReglaFalsa && hiddenMetodo) {
+            btnBiseccion.addEventListener('click', () => {
+                hiddenMetodo.value = "biseccion";
+                btnBiseccion.classList.replace('bg-light', 'active');
+                btnBiseccion.classList.replace('text-dark', 'text-white');
+                btnReglaFalsa.classList.replace('active', 'bg-light');
+                btnReglaFalsa.classList.replace('text-white', 'text-dark');
+            });
+
+            btnReglaFalsa.addEventListener('click', () => {
+                hiddenMetodo.value = "regla_falsa";
+                btnReglaFalsa.classList.replace('bg-light', 'active');
+                btnReglaFalsa.classList.replace('text-dark', 'text-white');
+                btnBiseccion.classList.replace('active', 'bg-light');
+                btnBiseccion.classList.replace('text-white', 'text-dark');
+            });
+        }
+
+        // --- 2. Lógica de GeoGebra (CORREGIDA) ---
+        @if (Model?.Resultado?.Exito == true)
+        {
+            <text>
+            const ggbContainer = document.getElementById('ggb-element');
+            
+            if (ggbContainer) {
+                // Pasamos las variables de C# a JavaScript de forma segura
+                const funcionStr = '@Html.Raw(Model.FuncionTexto)';
+                const raizX = @Model.Resultado.Raiz.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                const xi = @Model.Xi.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                const xd = @Model.Xd.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                const params = {
+                    "appName": "graphing",
+                    "width": ggbContainer.parentElement.clientWidth || 600,
+                    "height": 450,
+                    "showToolBar": false,
+                    "showAlgebraInput": false,
+                    "showMenuBar": false,
+                    "allowStyleBar": false,
+                    "enableRightClick": false,
+                    "useBrowserForJS": true,
+                    // LA CLAVE: Esta función se ejecuta SÓLO cuando GeoGebra está listo
+                    "appletOnLoad": function(ggbApi) {
+                        try {
+                            // A. Dibujar la Función f(x)
+                            ggbApi.evalCommand('f(x) = ' + funcionStr);
+                            ggbApi.setColor('f', 13, 110, 253); // Azul
+                            ggbApi.setLineThickness('f', 3);
+
+                            // B. Dibujar la Raíz
+                            ggbApi.evalCommand('Raiz = (' + raizX + ', 0)');
+                            ggbApi.setColor('Raiz', 220, 53, 69); // Rojo
+                            ggbApi.setPointSize('Raiz', 5);
+                            ggbApi.showLabel('Raiz', false);
+
+                            // C. Dibujar Límites
+                            ggbApi.evalCommand('LimInf = x = ' + xi);
+                            ggbApi.evalCommand('LimSup = x = ' + xd);
+                            ggbApi.setLineStyle('LimInf', 1);
+                            ggbApi.setLineStyle('LimSup', 1);
+                            ggbApi.setColor('LimInf', 108, 117, 125); // Gris
+                            ggbApi.setColor('LimSup', 108, 117, 125);
+                            ggbApi.showLabel('LimInf', false);
+                            ggbApi.showLabel('LimSup', false);
+
+                            // D. Hacer Zoom al intervalo
+                            const margen = Math.abs(xd - xi) * 0.4;
+                            const xMin = Math.min(xi, xd) - margen;
+                            const xMax = Math.max(xi, xd) + margen;
+                            ggbApi.setCoordSystem(xMin, xMax, -10, 10);
+                            
+                        } catch (error) {
+                            console.error("Error de comandos en GeoGebra: ", error);
+                        }
+                    }
+                };
+
+                // Creamos e inyectamos el gráfico
+                const applet = new GGBApplet(params, true);
+                applet.inject('ggb-element');
+            }
+            </text>
+        }
+    });
+</script>
+

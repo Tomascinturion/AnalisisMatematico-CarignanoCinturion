@@ -11,6 +11,6 @@ namespace TabajoAnalisisMatematico.Models
         public double Xi { get; set; }
         public double Xd { get; set; }
         public string MetodoElegido { get; set; }
-        public ResultadoMetodos Resultado { get; set; }
+        public ResultadoMetodos? Resultado { get; set; }
     }
 }

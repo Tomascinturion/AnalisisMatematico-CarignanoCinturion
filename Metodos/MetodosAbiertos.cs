@@ -19,7 +19,7 @@ namespace Metodos
             double xrAnterior = 0;
             double error = 0;
 
-            for (int i = 1; i <= iteraciones; i++)
+            /*for (int i = 1; i <= iteraciones; i++)
             {
                 xr = CalcularXr(metodo, funcion, xi, xd, tolerancia);
 
@@ -50,7 +50,7 @@ namespace Metodos
                 }
 
                 xrAnterior = xr;
-            }
+            }*/
 
             return new ResultadoMetodos
             {
