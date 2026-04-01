@@ -1,5 +1,4 @@
-﻿
-using Calculus;
+﻿using Calculus;
 
 namespace Metodos
 {
@@ -8,7 +7,6 @@ namespace Metodos
         public ResultadoMetodos Calcular(string funcionTexto, string metodo, double xi, double xd, int iteraciones, double tolerancia)
         {
             //TODO: VALIDAR TAMBIEN EN FRONT LOS CAMPOS NUMERICOS QUE SE RECIBEN COMO STRING 
-            metodo = metodo.ToLower();
 
             Calculo analizador = new Calculo();
 
@@ -29,6 +27,17 @@ namespace Metodos
                 {
                     Exito = false,
                     Mensaje = "La función ingresada no es válida."
+                };
+            }
+
+            metodo = metodo.ToLower();
+
+            if (metodo != "secante" || metodo != "tangente")
+            {
+                return new ResultadoMetodos
+                {
+                    Exito = false,
+                    Mensaje = "El método ingresado no es válido."
                 };
             }
 
@@ -56,7 +65,7 @@ namespace Metodos
             double xrAnterior = 0;
             double error = 0;
 
-            /*for (int i = 1; i <= iteraciones; i++)
+            for (int i = 1; i <= iteraciones; i++)
             {
                 xr = CalcularXr(metodo, analizador, xi, xd, tolerancia);
 
@@ -100,7 +109,7 @@ namespace Metodos
                 }
 
                 xrAnterior = xr;
-            }*/
+            }
 
             return new ResultadoMetodos
             {
