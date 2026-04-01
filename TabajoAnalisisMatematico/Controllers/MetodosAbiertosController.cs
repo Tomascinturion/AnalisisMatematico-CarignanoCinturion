@@ -31,7 +31,7 @@ namespace TabajoAnalisisMatematico.Controllers
                     modelo.Tolerancia);
             }
 
-            return View("~/Views/Home/Index.cshtml", modelo);
+            return View(modelo);
         }
     }
 }
