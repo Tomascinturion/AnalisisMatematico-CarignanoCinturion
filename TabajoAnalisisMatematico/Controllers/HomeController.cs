@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Metodos;
 using Microsoft.AspNetCore.Mvc;
 using TabajoAnalisisMatematico.Models;
 
