@@ -26,22 +26,15 @@ namespace Metodos
 
         public static ResultadoMetodos AnalizarRaiz(string funcionTexto, int iteraciones, double tolerancia, double xi, double xd, string metodo)
         {
-            // 1. INICIALIZAR LIBRERÍA CALCULUS
             Calculo evaluador = new Calculo();
 
-            // Verificamos que la función matemática esté bien escrita.
-            // Asumimos que la variable es siempre 'x' (puedes cambiarlo si tu app usa otra letra).
             if (!evaluador.Sintaxis(funcionTexto, 'x'))
             {
                 return new ResultadoMetodos { Exito = false, Mensaje = "Error de sintaxis en la función ingresada. Revisa los operadores." };
             }
 
-            // 2. CREAR NUESTRA "MÁQUINA" FUNCIONAL
-            // Envolvemos la librería Calculus en nuestro delegado para que sea súper rápido evaluarlo.
             Funcion f = x => evaluador.EvaluaFx(x);
 
-
-            // 3. VALIDAR EL INTERVALO INICIAL
             if (f(xi) * f(xd) > 0)
             {
                 return new ResultadoMetodos { Exito = false, Mensaje = "Error: f(xi) y f(xd) tienen el mismo signo. No hay garantía de raíz en este intervalo." };
@@ -52,7 +45,6 @@ namespace Metodos
                 return new ResultadoMetodos { Exito = true, Raiz = raizExacta, Iteraciones = 0, Error = 0, Mensaje = "Raíz exacta en los límites." };
             }
 
-            // 4. BUCLE PRINCIPAL (Bisección o Regla Falsa)
             double xrAnterior = 0;
             double xr = 0;
             double error = 0;
@@ -61,7 +53,6 @@ namespace Metodos
             {
                 xr = CalcularXr(metodo, f, xi, xd);
 
-                // Calcular error relativo
                 if (xr != 0)
                 {
                     error = Math.Abs((xr - xrAnterior) / xr);
@@ -71,7 +62,6 @@ namespace Metodos
                     error = double.PositiveInfinity;
                 }
 
-                // Condición de corte
                 if (i > 1 && (Math.Abs(f(xr)) < tolerancia || error < tolerancia))
                 {
                     return new ResultadoMetodos
@@ -84,7 +74,6 @@ namespace Metodos
                     };
                 }
 
-                // Actualizar límites
                 if (f(xi) * f(xr) > 0)
                 {
                     xi = xr;
@@ -97,10 +86,9 @@ namespace Metodos
                 xrAnterior = xr;
             }
 
-            // 5. SALIDA SI SUPERA ITERACIONES
             return new ResultadoMetodos
             {
-                Exito = false, // Lo marcamos como falso porque no alcanzó la tolerancia
+                Exito = false, 
                 Raiz = xr,
                 Iteraciones = iteraciones,
                 Error = error,
