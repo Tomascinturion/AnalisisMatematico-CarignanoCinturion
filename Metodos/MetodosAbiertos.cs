@@ -32,7 +32,7 @@ namespace Metodos
 
             metodo = metodo.ToLower();
 
-            if (metodo != "secante" || metodo != "tangente")
+            if (metodo != "secante" && metodo != "tangente")
             {
                 return new ResultadoMetodos
                 {
@@ -86,7 +86,7 @@ namespace Metodos
                         error = double.PositiveInfinity;
                 }
 
-                if (Math.Abs(analizador.EvaluaFx(xr)) < tolerancia || error < tolerancia)
+                if (Math.Abs(analizador.EvaluaFx(xr)) < tolerancia || (i > 1 && error < tolerancia))
                 {
                     return new ResultadoMetodos
                     {
