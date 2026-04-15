@@ -1,0 +1,29 @@
+﻿using System.Diagnostics;
+using Metodos;
+using Microsoft.AspNetCore.Mvc;
+using TabajoAnalisisMatematico.Models;
+
+namespace TabajoAnalisisMatematico.Controllers
+{
+    public class GaussJordanController : Controller
+    {
+        [HttpGet]
+        public IActionResult GJ()
+        {
+
+            return View(new GaussJordanController());
+        }
+
+
+        [HttpPost]
+        public IActionResult GJ(GaussJordanModel modelo)
+        {
+            if (ModelState.IsValid)
+            {
+                modelo.Resultado = GaussJordan.Gauss_Jordan(modelo.Matriz);
+            }
+
+            return View(modelo);
+        }
+    }
+}
