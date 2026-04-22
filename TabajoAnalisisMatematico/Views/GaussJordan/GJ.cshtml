@@ -1,0 +1,179 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "GaussJordan";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+    /* La misma grilla de la Unidad 1 */
+    .app-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    /* Nota: Agrandé un poco la primera columna (de 320px a 400px) para que entren más cuadraditos de la matriz sin romperse */
+    .content-area {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 20px;
+    }
+
+    /* Estilos de la cuadrilla de Gauss */
+    .matrix-input {
+        width: 55px;
+        height: 38px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        outline: none;
+        transition: 0.2s;
+    }
+
+        .matrix-input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+    .matrix-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        justify-content: center;
+    }
+
+    .equals-sign {
+        font-weight: bold;
+        color: #6c757d;
+        margin: 0 2px;
+    }
+
+    .matrix-wrapper {
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+    /* Por si hacen matrices muy grandes */
+</style>
+
+<div class="content-area">
+    <div class="card p-3 shadow-sm border-0">
+        <div class="mb-3 d-flex gap-2">
+            <a class="btn btn-dark btn-sm" href="/Home/Index">Unidad 1</a>
+            <a class="btn btn-dark btn-sm" href="#">Unidad 2</a>
+        </div>
+        <ul class="nav nav-tabs mb-3 flex-column border-0">
+            <li class="nav-item">
+                <a class="nav-link active text-dark fw-bold border-bottom" href="#">Gauss Jordan</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-muted" href="#">Gauss Seidel</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card p-4 shadow-sm border-0">
+        <h3 class="text-secondary mb-4" style="font-weight: 300;">Gauss Jordan</h3>
+
+        <form method="post" action="/GaussJordan/GJ">
+            <div class="mb-4" style="max-width: 200px;">
+                <label class="form-label text-muted">Dimensiones:</label>
+                <input type="number" class="form-control" id="input-dimension" name="Dimension" value="3" min="2" max="10">
+            </div>
+
+            <div id="matriz-container" class="mb-4"></div>
+
+            <button type="submit" class="btn btn-primary px-4 py-2" style="background-color: #5c7cfa; border: none;">Calcular</button>
+        </form>
+
+        @if (Model?.Resultado != null)
+        {
+            <div class="mt-5">
+                <h3 class="text-secondary mb-4" style="font-weight: 300;">Solución</h3>
+
+                <div id="solucion-container">
+                    <div class="matrix-wrapper d-flex justify-content-start">
+                        <div>
+                            @{
+                                int tamaño = Model.Resultado.Length;
+                            }
+
+                            @for (int i = 0; i < tamaño; i++)
+                            {
+                                <div class="matrix-row">
+                                    @for (int j = 0; j < tamaño; j++)
+                                    {
+                                        string valorIdentidad = (i == j) ? "1" : "0";
+                                        <input type="text" class="matrix-input bg-light text-muted" value="@valorIdentidad" readonly style="pointer-events: none;">
+                                    }
+
+                                    <span class="equals-sign">=</span>
+
+                                    <input type="text" class="matrix-input bg-light text-primary fw-bold" value="@Model.Resultado[i].ToString("F4")" readonly style="width: 80px; pointer-events: none;">
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputDimension = document.getElementById('input-dimension');
+        const matrizContainer = document.getElementById('matriz-container');
+
+        // Función que dibuja la grilla
+        function generarMatriz(n) {
+            matrizContainer.innerHTML = ''; // Limpiamos lo que haya
+
+            for (let i = 0; i < n; i++) {
+                // Creamos la fila
+                const row = document.createElement('div');
+                row.className = 'matrix-row';
+
+                // Creamos las columnas de las variables (X, Y, Z...)
+                for (let j = 0; j < n; j++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'matrix-input';
+                    // IMPORTANTE: Un nombre dinámico para que lo reciba C#
+                    input.name = `Matriz[${i}][${j}]`;
+                    row.appendChild(input);
+                }
+
+                // Agregamos el signo igual
+                const equals = document.createElement('span');
+                equals.className = 'equals-sign';
+                equals.innerText = '=';
+                row.appendChild(equals);
+
+                // Agregamos la columna del Término Independiente
+                const inputIndependiente = document.createElement('input');
+                inputIndependiente.type = 'text';
+                inputIndependiente.className = 'matrix-input';
+                // La guardamos en la última posición (n) de la fila
+                inputIndependiente.name = `Matriz[${i}][${n}]`;
+                row.appendChild(inputIndependiente);
+
+                matrizContainer.appendChild(row);
+            }
+        }
+
+        // Dibujamos la matriz inicial (de tamaño 3)
+        generarMatriz(parseInt(inputDimension.value));
+
+        // Si el usuario cambia el número, redibujamos la matriz
+        inputDimension.addEventListener('input', function(e) {
+            let dim = parseInt(e.target.value);
+            if (dim >= 2 && dim <= 10) {
+                generarMatriz(dim);
+            }
+        });
+    });
+</script>

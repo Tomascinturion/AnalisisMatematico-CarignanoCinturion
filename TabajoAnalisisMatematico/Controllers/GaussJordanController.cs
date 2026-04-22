@@ -11,7 +11,7 @@ namespace TabajoAnalisisMatematico.Controllers
         public IActionResult GJ()
         {
 
-            return View(new GaussJordanController());
+            return View(new GaussJordanModel());
         }
 
 
