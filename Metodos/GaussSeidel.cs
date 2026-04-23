@@ -9,7 +9,7 @@ namespace Metodos
 {
     public class GaussSeidel
     {
-        public static double[] Gauss_Seidel(double[,] matriz, int dimension)
+        public static double[] Gauss_Seidel(double[][] matriz, int dimension)
         {
             double tolerancia = 0.0001;
             bool esSolucion = false;
@@ -28,14 +28,14 @@ namespace Metodos
 
                 for(int row = 0; row < dimension; row++)
                 {
-                    double resultado = matriz[row, dimension]; //Termino independiente
-                    double coeficienteIncognita = matriz[row, row]; //Coeficiente de la incógnita actual
+                    double resultado = matriz[row][dimension]; //Termino independiente
+                    double coeficienteIncognita = matriz[row][row]; //Coeficiente de la incógnita actual
                     for(int col = 0; col < dimension; col++)
                     {
                         if (col != row)
                         {
                             //Resto el producto de los coeficientes por las soluciones anteriores
-                            resultado -= matriz[row, col] * vectorResultado[col];
+                            resultado -= matriz[row][col] * vectorResultado[col];
                         }
                     }
 
