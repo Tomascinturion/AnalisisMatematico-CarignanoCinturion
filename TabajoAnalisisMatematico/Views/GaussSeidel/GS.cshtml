@@ -1,6 +1,7 @@
-﻿@{
+﻿@model TabajoAnalisisMatematico.Models.GaussSeidelModel
+@{
     Layout = null;
-    ViewData["Title"] = "GaussJordan";
+    ViewData["Title"] = "GaussSeidel";
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -68,18 +69,18 @@
         </div>
         <ul class="nav nav-tabs mb-3 flex-column border-0">
             <li class="nav-item">
-                <a class="nav-link active text-dark fw-bold border-bottom" href="#">Gauss Jordan</a>
+                <a class="nav-link text-muted" href="/GaussJordan/GJ">Gauss Jordan</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-muted" href="/GaussSeidel/GS">Gauss Seidel</a>
+                <a class="nav-link active text-dark fw-bold border-bottom" href="#">Gauss Seidel</a>
             </li>
         </ul>
     </div>
 
     <div class="card p-4 shadow-sm border-0">
-        <h3 class="text-secondary mb-4" style="font-weight: 300;">Gauss Jordan</h3>
+        <h3 class="text-secondary mb-4" style="font-weight: 300;">Gauss Seidel</h3>
 
-        <form method="post" action="/GaussJordan/GJ">
+        <form method="post" action="/GaussSeidel/GS">
             <div class="mb-4" style="max-width: 200px;">
                 <label class="form-label text-muted">Dimensiones:</label>
                 <input type="number" class="form-control" id="input-dimension" name="Dimension" value="3" min="2" max="10">
@@ -124,56 +125,56 @@
     </div>
 </div>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const inputDimension = document.getElementById('input-dimension');
-        const matrizContainer = document.getElementById('matriz-container');
+        document.addEventListener("DOMContentLoaded", function() {
+            const inputDimension = document.getElementById('input-dimension');
+            const matrizContainer = document.getElementById('matriz-container');
 
-        // Función que dibuja la grilla
-        function generarMatriz(n) {
-            matrizContainer.innerHTML = ''; // Limpiamos lo que haya
+            // Función que dibuja la grilla
+            function generarMatriz(n) {
+                matrizContainer.innerHTML = ''; // Limpiamos lo que haya
 
-            for (let i = 0; i < n; i++) {
-                // Creamos la fila
-                const row = document.createElement('div');
-                row.className = 'matrix-row';
+                for (let i = 0; i < n; i++) {
+                    // Creamos la fila
+                    const row = document.createElement('div');
+                    row.className = 'matrix-row';
 
-                // Creamos las columnas de las variables (X, Y, Z...)
-                for (let j = 0; j < n; j++) {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.className = 'matrix-input';
-                    // IMPORTANTE: Un nombre dinámico para que lo reciba C#
-                    input.name = `Matriz[${i}][${j}]`;
-                    row.appendChild(input);
+                    // Creamos las columnas de las variables (X, Y, Z...)
+                    for (let j = 0; j < n; j++) {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'matrix-input';
+                        // IMPORTANTE: Un nombre dinámico para que lo reciba C#
+                        input.name = `Matriz[${i}][${j}]`;
+                        row.appendChild(input);
+                    }
+
+                    // Agregamos el signo igual
+                    const equals = document.createElement('span');
+                    equals.className = 'equals-sign';
+                    equals.innerText = '=';
+                    row.appendChild(equals);
+
+                    // Agregamos la columna del Término Independiente
+                    const inputIndependiente = document.createElement('input');
+                    inputIndependiente.type = 'text';
+                    inputIndependiente.className = 'matrix-input';
+                    // La guardamos en la última posición (n) de la fila
+                    inputIndependiente.name = `Matriz[${i}][${n}]`;
+                    row.appendChild(inputIndependiente);
+
+                    matrizContainer.appendChild(row);
                 }
-
-                // Agregamos el signo igual
-                const equals = document.createElement('span');
-                equals.className = 'equals-sign';
-                equals.innerText = '=';
-                row.appendChild(equals);
-
-                // Agregamos la columna del Término Independiente
-                const inputIndependiente = document.createElement('input');
-                inputIndependiente.type = 'text';
-                inputIndependiente.className = 'matrix-input';
-                // La guardamos en la última posición (n) de la fila
-                inputIndependiente.name = `Matriz[${i}][${n}]`;
-                row.appendChild(inputIndependiente);
-
-                matrizContainer.appendChild(row);
             }
-        }
 
-        // Dibujamos la matriz inicial (de tamaño 3)
-        generarMatriz(parseInt(inputDimension.value));
+            // Dibujamos la matriz inicial (de tamaño 3)
+            generarMatriz(parseInt(inputDimension.value));
 
-        // Si el usuario cambia el número, redibujamos la matriz
-        inputDimension.addEventListener('input', function(e) {
-            let dim = parseInt(e.target.value);
-            if (dim >= 2 && dim <= 10) {
-                generarMatriz(dim);
-            }
+            // Si el usuario cambia el número, redibujamos la matriz
+            inputDimension.addEventListener('input', function(e) {
+                let dim = parseInt(e.target.value);
+                if (dim >= 2 && dim <= 10) {
+                    generarMatriz(dim);
+                }
+            });
         });
-    });
 </script>
