@@ -160,7 +160,7 @@
                 // Variables (A)
                 for (let j = 0; j < n; j++) {
                     const input = document.createElement('input');
-                    input.type = 'number';
+                    input.type = 'text';
                     input.step = 'any';
                     input.className = 'matrix-input';
                     input.name = `Matriz[${i}][${j}]`;
@@ -182,7 +182,7 @@
 
                 // Término Independiente (B)
                 const inputIndependiente = document.createElement('input');
-                inputIndependiente.type = 'number';
+                inputIndependiente.type = 'text';
                 inputIndependiente.step = 'any';
                 inputIndependiente.className = 'matrix-input bg-light';
                 inputIndependiente.name = `Matriz[${i}][${n}]`;
