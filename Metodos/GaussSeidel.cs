@@ -19,6 +19,13 @@ namespace Metodos
             vectorResultado.Initialize(); //Inicializa con ceros
             double[] vectorAnterior = new double[dimension];
 
+            if (!EsDiagonalmenteDominante(matriz, dimension))
+            {
+                throw new InvalidOperationException(
+                    "La matriz no es diagonalmente dominante. Gauss-Seidel puede no converger."
+                );
+            }
+
             while (contador <= 100 && !esSolucion)
             {
                 contador++;
@@ -38,6 +45,13 @@ namespace Metodos
                             //Resto el producto de los coeficientes por las soluciones anteriores
                             resultado -= matriz[row][col] * vectorResultado[col];
                         }
+                    }
+
+                    if (matriz[row][row] == 0)
+                    {
+                        throw new DivideByZeroException(
+                            $"Elemento diagonal en fila {row} es 0. No se puede aplicar Gauss-Seidel."
+                        );
                     }
 
                     //Divido por el coeficiente de la incógnita actual
@@ -76,6 +90,31 @@ namespace Metodos
             {
                 throw new ArgumentOutOfRangeException("El método no convergió después de 100 iteraciones.");
             }
+        }
+
+        public bool EsDiagonalmenteDominante(double[][] matriz, int dimension)
+        {
+            for (int i = 0; i < dimension; i++)
+            {
+                double sumaFila = 0;
+                double diagonal = Math.Abs(matriz[i][i]);
+
+                for (int j = 0; j < dimension; j++)
+                {
+                    if (i != j)
+                    {
+                        sumaFila += Math.Abs(matriz[i][j]);
+                    }
+                }
+
+                // condición de dominancia diagonal
+                if (diagonal < sumaFila)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
