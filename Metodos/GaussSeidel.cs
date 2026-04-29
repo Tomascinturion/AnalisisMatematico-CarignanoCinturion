@@ -9,8 +9,9 @@ namespace Metodos
 {
     public class GaussSeidel
     {
-        public static double[] Gauss_Seidel(double[][] matriz, int dimension)
+        public ResultadoGaussSeidel Gauss_Seidel(double[][] matriz, int dimension)
         {
+
             double tolerancia = 0.0001;
             bool esSolucion = false;
             int contador = 0;
@@ -63,7 +64,13 @@ namespace Metodos
 
             if (contador <= 100)
             {
-                return vectorResultado;
+                return new ResultadoGaussSeidel
+                {
+                    Iteraciones = contador,
+                    Resultado = vectorResultado
+                }; 
+
+                
             }
             else
             {

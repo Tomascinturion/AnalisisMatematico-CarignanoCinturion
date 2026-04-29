@@ -22,8 +22,9 @@ namespace TabajoAnalisisMatematico.Controllers
             {
                 try
                 {
-                    // Intentamos calcular
-                    modelo.Resultado = GaussSeidel.Gauss_Seidel(modelo.Matriz, modelo.Dimension);
+                    GaussSeidel gaussSeidel = new GaussSeidel();
+                    // Usar la instancia creada para llamar al método no estático
+                    modelo.Resultado = gaussSeidel.Gauss_Seidel(modelo.Matriz, modelo.Dimension);
                 }
                 catch (ArgumentOutOfRangeException ex)
                 {
