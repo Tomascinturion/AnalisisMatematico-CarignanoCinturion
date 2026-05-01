@@ -26,12 +26,11 @@ namespace TabajoAnalisisMatematico.Controllers
                     // Usar la instancia creada para llamar al método no estático
                     modelo.Resultado = gaussSeidel.Gauss_Seidel(modelo.Matriz, modelo.Dimension);
                 }
-                catch (ArgumentOutOfRangeException ex)
+                catch (Exception ex)
                 {
-                    // Si salta el throw, lo atrapamos y lo mandamos a la vista como un error de validación
-                    ModelState.AddModelError("ErrorMetodo", ex.ParamName ?? ex.Message);
-                    // Vaciamos el resultado para que no muestre soluciones falsas
-                    modelo.Resultado = null;
+                    // Si tu lógica tira un "throw new...", el código salta automáticamente acá.
+                    // Guardamos tu mensaje de error en el ViewBag para mandarlo al HTML.
+                    ViewBag.ErrorMessage = ex.Message;
                 }
             }
 
