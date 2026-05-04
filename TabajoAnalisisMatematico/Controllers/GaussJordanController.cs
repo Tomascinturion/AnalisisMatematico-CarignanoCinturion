@@ -20,10 +20,17 @@ namespace TabajoAnalisisMatematico.Controllers
         {
             if (ModelState.IsValid)
             {
-                modelo.Resultado = GaussJordan.Gauss_Jordan(modelo.Matriz);
-            }
+                try
+                {
+                    modelo.Resultado = GaussJordan.Gauss_Jordan(modelo.Matriz);
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.ErrorMessage = ex.Message;
+                }
 
-            return View(modelo);
+            }
+                return View(modelo);
         }
     }
 }
