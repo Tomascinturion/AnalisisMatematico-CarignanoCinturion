@@ -8,26 +8,60 @@ namespace TabajoAnalisisMatematico.Controllers
         [HttpGet]
         public IActionResult RegresionLineal()
         {
-            var modeloVista = new RegresionLinealModel();
-            return View(modeloVista);
+            var modelo = new RegresionLinealModel();
+            return View(modelo);
         }
         [HttpPost]
-        public IActionResult RegresionLineal(RegresionLinealModel modeloVista)
+        public IActionResult RegresionLineal(RegresionLinealModel modelo, string PuntosCargadosOcultos)
         {
             try
             {
-                var calculadora = new Metodos.RegresionLineal();
+                {
+                    // 1. Inicializamos la lista vacía
+                    modelo.Puntos = new List<double[]>();
 
-                modeloVista.Resultado = calculadora.CalcularRegresionLineal(modeloVista.Puntos);
+                    // 2. Transformamos el string plano en la lista de arrays
+                    if (!string.IsNullOrWhiteSpace(PuntosCargadosOcultos))
+                    {
+                        // Separamos por punto y coma (cada elemento es un punto entero)
+                        string[] lineas = PuntosCargadosOcultos.Split(';');
 
-                modeloVista.MensajeError = null;
+                        foreach (string linea in lineas)
+                        {
+                            if (string.IsNullOrWhiteSpace(linea)) continue;
+
+                            // Separamos por coma (para dividir X e Y)
+                            string[] coordenadas = linea.Split(',');
+
+                            if (coordenadas.Length == 2)
+                            {
+                                // Parseamos forzando la coma para que tu Windows no tire error
+                                double x = Convert.ToDouble(coordenadas[0].Trim().Replace(".", ","));
+                                double y = Convert.ToDouble(coordenadas[1].Trim().Replace(".", ","));
+
+                                modelo.Puntos.Add(new double[] { x, y });
+                            }
+                        }
+                    }
+
+                    // 3. Validamos que el usuario no haya tocado calcular sin ingresar datos
+                    if (modelo.Puntos.Count < 2)
+                    {
+                        throw new Exception("Debe ingresar al menos 2 puntos para calcular la recta.");
+                    }
+                    var calculadora = new Metodos.RegresionLineal();
+
+                    modelo.Resultado = calculadora.CalcularRegresionLineal(modelo.Puntos);
+
+                    modelo.MensajeError = null;
+                }
             }
             catch (Exception ex)
             {
-                modeloVista.MensajeError = ex.Message;
+                modelo.MensajeError = ex.Message;
             }
 
-            return View(modeloVista);
+            return View(modelo);
         }
     }
 }
