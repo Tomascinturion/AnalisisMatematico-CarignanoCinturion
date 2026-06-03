@@ -100,7 +100,7 @@
                 <div class="d-flex gap-2 mb-3">
                     <input type="number" step="any" id="inputX" class="form-control" placeholder="X" onkeypress="verificarEnter(event)" />
                     <input type="number" step="any" id="inputY" class="form-control" placeholder="Y" onkeypress="verificarEnter(event)" />
-                    <button type="button" class="btn btn-success" onclick="agregarPunto()">
+                    <button type="button" class="btn btn-dark btn-sm" onclick="agregarPunto()">
                         <i class="bi bi-plus-lg"></i>
                     </button>
                 </div>
@@ -121,8 +121,8 @@
                 <input type="hidden" name="PuntosCargadosOcultos" id="puntosOcultos" value="" />
 
                 <div class="d-flex gap-2 mb-4 flex-wrap">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="borrarUltimo()">Borrar Último</button>
-                    <button type="button" class="btn btn-warning btn-sm text-dark" onclick="borrarTodos()">Borrar Todos</button>
+                    <button type="button" class="btn btn-dark btn-sm text-white" onclick="borrarUltimo()">Borrar Último</button>
+                    <button type="button" class="btn btn-dark btn-sm text-white" onclick="borrarTodos()">Borrar Todos</button>
                     <button type="button" id="btnEditar" class="btn btn-dark btn-sm text-white" onclick="toggleEdicion()">Editar</button>
                 </div>
 
@@ -161,127 +161,129 @@
 <script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
 <script>
     function verificarEnter(event) {
-    if (event.key === "Enter") {
-    event.preventDefault();
-    agregarPunto();
-    }
+        if (event.key === "Enter") {
+            event.preventDefault();
+            agregarPunto();
+        }
     }
 
     function agregarPunto() {
-    const x = document.getElementById('inputX').value;
-    const y = document.getElementById('inputY').value;
-    const txtArea = document.getElementById('txtPuntos');
+        const x = document.getElementById('inputX').value;
+        const y = document.getElementById('inputY').value;
+        const txtArea = document.getElementById('txtPuntos');
 
-    if (x !== "" && y !== "") {
-    const prefijo = txtArea.value.trim() === "" ? "" : "\n";
-    txtArea.value += `${prefijo}${x}, ${y}`;
+        if (x !== "" && y !== "") {
+            const prefijo = txtArea.value.trim() === "" ? "" : "\n";
+            // CAMBIO 1: Usamos punto y coma (;) para separar X e Y
+            txtArea.value += `${prefijo}${x}; ${y}`;
 
-    document.getElementById('inputX').value = '';
-    document.getElementById('inputY').value = '';
-    document.getElementById('inputX').focus();
-    } else {
-    alert("Por favor ingrese valores para X e Y.");
-    }
+            document.getElementById('inputX').value = '';
+            document.getElementById('inputY').value = '';
+            document.getElementById('inputX').focus();
+        } else {
+            alert("Por favor ingrese valores para X e Y.");
+        }
     }
 
     function borrarUltimo() {
-    const txtArea = document.getElementById('txtPuntos');
-    let lineas = txtArea.value.split('\n');
+        const txtArea = document.getElementById('txtPuntos');
+        let lineas = txtArea.value.split('\n');
 
-    if (lineas.length > 0 && lineas[0] !== "") {
-    lineas.pop();
-    txtArea.value = lineas.join('\n');
-    }
+        if (lineas.length > 0 && lineas[0] !== "") {
+            lineas.pop();
+            txtArea.value = lineas.join('\n');
+        }
     }
 
     function borrarTodos() {
-    if(confirm("¿Estás seguro de borrar todos los puntos?")) {
-    document.getElementById('txtPuntos').value = '';
-    }
+        if(confirm("¿Estás seguro de borrar todos los puntos?")) {
+            document.getElementById('txtPuntos').value = '';
+        }
     }
 
     function toggleEdicion() {
-    const txtArea = document.getElementById('txtPuntos');
-    const btnEditar = document.getElementById('btnEditar');
+        const txtArea = document.getElementById('txtPuntos');
+        const btnEditar = document.getElementById('btnEditar');
 
-    if (txtArea.hasAttribute('readonly')) {
-    txtArea.removeAttribute('readonly');
-    txtArea.focus();
-    btnEditar.classList.replace('btn-dark', 'btn-success');
-    btnEditar.innerHTML = 'Guardar Edición';
-    txtArea.style.borderColor = '#0d6efd';
-    } else {
-    txtArea.setAttribute('readonly', 'readonly');
-    btnEditar.classList.replace('btn-success', 'btn-dark');
-    btnEditar.innerHTML = 'Editar';
-    txtArea.style.borderColor = '#dee2e6';
-    }
+        if (txtArea.hasAttribute('readonly')) {
+            txtArea.removeAttribute('readonly');
+            txtArea.focus();
+            btnEditar.classList.replace('btn-dark', 'btn-success');
+            btnEditar.innerHTML = 'Guardar Edición';
+            txtArea.style.borderColor = '#0d6efd';
+        } else {
+            txtArea.setAttribute('readonly', 'readonly');
+            btnEditar.classList.replace('btn-success', 'btn-dark');
+            btnEditar.innerHTML = 'Editar';
+            txtArea.style.borderColor = '#dee2e6';
+        }
     }
 
     function prepararEnvio() {
-    const txtArea = document.getElementById('txtPuntos');
-    let textoLimpio = txtArea.value.trim().replace(/\n/g, ';');
-    document.getElementById('puntosOcultos').value = textoLimpio;
+        const txtArea = document.getElementById('txtPuntos');
+        // CAMBIO 2: Usamos barra vertical (|) para separar las líneas
+        let textoLimpio = txtArea.value.trim().replace(/\n/g, '|');
+        document.getElementById('puntosOcultos').value = textoLimpio;
     }
 
-    // --- Lógica de GeoGebra (Idéntica a la Lineal) ---
+    // --- Lógica de GeoGebra ---
     let funcionParaGraficar = "";
     let puntosParaGraficar = [];
 
     @if (Model?.Resultado != null)
     {
-        <text>
-            funcionParaGraficar = '@Html.Raw(Model.Resultado.FuncionObtenida)'.replace(/,/g, '.');
-        </text>
+            <text>
+                funcionParaGraficar = '@Html.Raw(Model.Resultado.FuncionObtenida)'.replace(/,/g, '.');
+            </text>
     }
 
     @if (Model?.Puntos != null && Model.Puntos.Count > 0)
     {
-        foreach (var p in Model.Puntos)
-        {
-            <text>
-                puntosParaGraficar.push({
-                x: @p[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
-                y: @p[1].ToString(System.Globalization.CultureInfo.InvariantCulture)
-                });
-            </text>
-        }
+            foreach (var p in Model.Puntos)
+            {
+                    <text>
+                        puntosParaGraficar.push({
+                        x: @p[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        y: @p[1].ToString(System.Globalization.CultureInfo.InvariantCulture)
+                        });
+                    </text>
+            }
     }
 
     var parameters = {
-    "id": "ggbApplet",
-    "width": 800,
-    "height": 500,
-    "showToolBar": false,
-    "showMenuBar": false,
-    "useBrowserForJS": true,
-    "appName": "graphing",
-    "appletOnLoad": function() {
+        "id": "ggbApplet",
+        "width": 800,
+        "height": 500,
+        "showToolBar": false,
+        "showMenuBar": false,
+        "useBrowserForJS": true,
+        "appName": "graphing",
+        "appletOnLoad": function() {
 
-    puntosParaGraficar.forEach((p, index) => {
-    let nombrePunto = `Punto${index}`;
-    ggbApplet.evalCommand(`${nombrePunto} = (${p.x}, ${p.y})`);
-    });
+            puntosParaGraficar.forEach((p, index) => {
+                let nombrePunto = `Punto${index}`;
+                ggbApplet.evalCommand(`${nombrePunto} = (${p.x}, ${p.y})`);
+            });
 
-    if (funcionParaGraficar !== "") {
-    ggbApplet.evalCommand(funcionParaGraficar);
-    }
+            if (funcionParaGraficar !== "") {
+                ggbApplet.evalCommand(funcionParaGraficar);
+            }
 
-    if (puntosParaGraficar.length > 0) {
-    let minX = Math.min(...puntosParaGraficar.map(p => p.x));
-    let maxX = Math.max(...puntosParaGraficar.map(p => p.x));
-    let minY = Math.min(...puntosParaGraficar.map(p => p.y));
-    let maxY = Math.max(...puntosParaGraficar.map(p => p.y));
+            if (puntosParaGraficar.length > 0) {
+                let minX = Math.min(...puntosParaGraficar.map(p => p.x));
+                let maxX = Math.max(...puntosParaGraficar.map(p => p.x));
+                let minY = Math.min(...puntosParaGraficar.map(p => p.y));
+                let maxY = Math.max(...puntosParaGraficar.map(p => p.y));
 
-    ggbApplet.setCoordSystem(minX - 3, maxX + 3, minY - 3, maxY + 3);
-    }
-    }
+                ggbApplet.setCoordSystem(minX - 3, maxX + 3, minY - 3, maxY + 3);
+            }
+        }
     };
 
     window.onload = function() {
-    if (funcionParaGraficar !== "" || puntosParaGraficar.length > 0) {
-    var applet = new GGBApplet(parameters, '5.0');
-    applet.inject('ggb-element');
-    }
+        if (funcionParaGraficar !== "" || puntosParaGraficar.length > 0) {
+            var applet = new GGBApplet(parameters, '5.0');
+            applet.inject('ggb-element');
+        }
     };
 </script>

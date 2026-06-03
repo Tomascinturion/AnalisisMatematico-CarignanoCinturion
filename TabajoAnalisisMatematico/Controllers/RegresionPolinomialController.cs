@@ -26,13 +26,13 @@ namespace TabajoAnalisisMatematico.Controllers
                 // 2. Transformamos el string plano en la lista de arrays (¡El mismo cambio que en la Lineal!)
                 if (!string.IsNullOrWhiteSpace(PuntosCargadosOcultos))
                 {
-                    string[] lineas = PuntosCargadosOcultos.Split(';');
+                    string[] lineas = PuntosCargadosOcultos.Split('|');
 
                     foreach (string linea in lineas)
                     {
                         if (string.IsNullOrWhiteSpace(linea)) continue;
 
-                        string[] coordenadas = linea.Split(',');
+                        string[] coordenadas = linea.Split(';');
 
                         if (coordenadas.Length == 2)
                         {
