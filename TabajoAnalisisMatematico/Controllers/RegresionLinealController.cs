@@ -24,14 +24,14 @@ namespace TabajoAnalisisMatematico.Controllers
                     if (!string.IsNullOrWhiteSpace(PuntosCargadosOcultos))
                     {
                         // Separamos por punto y coma (cada elemento es un punto entero)
-                        string[] lineas = PuntosCargadosOcultos.Split(';');
+                        string[] lineas = PuntosCargadosOcultos.Split('|');
 
                         foreach (string linea in lineas)
                         {
                             if (string.IsNullOrWhiteSpace(linea)) continue;
 
                             // Separamos por coma (para dividir X e Y)
-                            string[] coordenadas = linea.Split(',');
+                            string[] coordenadas = linea.Split(';');
 
                             if (coordenadas.Length == 2)
                             {

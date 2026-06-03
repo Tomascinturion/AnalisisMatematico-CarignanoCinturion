@@ -93,7 +93,7 @@
                 <div class="d-flex gap-2 mb-3">
                     <input type="number" step="any" id="inputX" class="form-control" placeholder="X" onkeypress="verificarEnter(event)" />
                     <input type="number" step="any" id="inputY" class="form-control" placeholder="Y" onkeypress="verificarEnter(event)" />
-                    <button type="button" class="btn btn-success" onclick="agregarPunto()">
+                    <button type="button" class="btn btn-dark btn-sm " onclick="agregarPunto()">
                         <i class="bi bi-plus-lg"></i>
                     </button>
                 </div>
@@ -114,8 +114,8 @@
                 <input type="hidden" name="PuntosCargadosOcultos" id="puntosOcultos" value="" />
 
                 <div class="d-flex gap-2 mb-4 flex-wrap">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="borrarUltimo()">Borrar Último</button>
-                    <button type="button" class="btn btn-warning btn-sm text-dark" onclick="borrarTodos()">Borrar Todos</button>
+                    <button type="button" class="btn btn-dark btn-sm text-white" onclick="borrarUltimo()">Borrar Último</button>
+                    <button type="button" class="btn btn-dark btn-sm text-white" onclick="borrarTodos()">Borrar Todos</button>
                     <button type="button" id="btnEditar" class="btn btn-dark btn-sm text-white" onclick="toggleEdicion()">Editar</button>
                 </div>
 
@@ -170,7 +170,8 @@
         if (x !== "" && y !== "") {
             // Si el cuadro no está vacío, agregamos un salto de línea antes del nuevo punto
             const prefijo = txtArea.value.trim() === "" ? "" : "\n";
-            txtArea.value += `${prefijo}${x}, ${y}`;
+            // CAMBIO 1: Usamos ; para separar X e Y
+            txtArea.value += `${prefijo}${x}; ${y}`;
 
             // Limpiar inputs
             document.getElementById('inputX').value = '';
@@ -209,50 +210,51 @@
             txtArea.focus(); // Ponemos el cursor adentro
 
             // Cambiamos el botón para que diga Guardar
-                btnEditar.classList.replace('btn-dark', 'btn-success');
-                btnEditar.innerHTML = 'Guardar Edición';
-                txtArea.style.borderColor = '#0d6efd';
-            } else {
-                // SALIR DE MODO EDICIÓN
-                txtArea.setAttribute('readonly', 'readonly');
+            btnEditar.classList.replace('btn-dark', 'btn-success');
+            btnEditar.innerHTML = 'Guardar Edición';
+            txtArea.style.borderColor = '#0d6efd';
+        } else {
+            // SALIR DE MODO EDICIÓN
+            txtArea.setAttribute('readonly', 'readonly');
 
-                // Restauramos de Verde (success) a Negro (dark)
-                btnEditar.classList.replace('btn-success', 'btn-dark');
-                btnEditar.innerHTML = 'Editar';
-                txtArea.style.borderColor = '#dee2e6';
-            }
+            // Restauramos de Verde (success) a Negro (dark)
+            btnEditar.classList.replace('btn-success', 'btn-dark');
+            btnEditar.innerHTML = 'Editar';
+            txtArea.style.borderColor = '#dee2e6';
+        }
     }
 
     function prepararEnvio() {
         const txtArea = document.getElementById('txtPuntos');
 
-        // Reemplazamos los saltos de línea (\n) por punto y coma (;)
-        // para que viaje un solo texto limpio hacia el controlador de C#
-        let textoLimpio = txtArea.value.trim().replace(/\n/g, ';');
+        // CAMBIO 2: Reemplazamos los saltos de línea (\n) por la barra vertical (|)
+        let textoLimpio = txtArea.value.trim().replace(/\n/g, '|');
 
         document.getElementById('puntosOcultos').value = textoLimpio;
     }
+
     let funcionParaGraficar = "";
     let puntosParaGraficar = [];
 
     @if (Model?.Resultado != null)
     {
-            <text>
-                funcionParaGraficar = '@Model.Resultado.FuncionObtenida'.replace(/,/g, '.');
-            </text>
+                <text>
+                    // CAMBIO 3: Html.Raw protege los símbolos matemáticos
+                    funcionParaGraficar = '@Html.Raw(Model.Resultado.FuncionObtenida)'.replace(/,/g, '.');
+                </text>
     }
 
     @if (Model?.Puntos != null && Model.Puntos.Count > 0)
     {
-            foreach (var p in Model.Puntos)
-            {
-                    <text>
-                        puntosParaGraficar.push({
-                            x: @p[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
-                            y: @p[1].ToString(System.Globalization.CultureInfo.InvariantCulture)
-                        });
-                    </text>
-            }
+                foreach (var p in Model.Puntos)
+                {
+                            <text>
+                                puntosParaGraficar.push({
+                                    x: @p[0].ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                    y: @p[1].ToString(System.Globalization.CultureInfo.InvariantCulture)
+                                });
+                            </text>
+                }
     }
 
     var parameters = {
@@ -262,25 +264,25 @@
         "showToolBar": false,
         "showMenuBar": false,
         "useBrowserForJS": true,
-        "appName": "graphing",   
+        "appName": "graphing",
         "appletOnLoad": function() {
 
             puntosParaGraficar.forEach((p, index) => {
-            let nombrePunto = `Punto${index}`;
-            ggbApplet.evalCommand(`${nombrePunto} = (${p.x}, ${p.y})`);
+                let nombrePunto = `Punto${index}`;
+                ggbApplet.evalCommand(`${nombrePunto} = (${p.x}, ${p.y})`);
             });
 
             if (funcionParaGraficar !== "") {
-            ggbApplet.evalCommand(funcionParaGraficar);
+                ggbApplet.evalCommand(funcionParaGraficar);
             }
 
             if (puntosParaGraficar.length > 0) {
-            let minX = Math.min(...puntosParaGraficar.map(p => p.x));
-            let maxX = Math.max(...puntosParaGraficar.map(p => p.x));
-            let minY = Math.min(...puntosParaGraficar.map(p => p.y));
-            let maxY = Math.max(...puntosParaGraficar.map(p => p.y));
+                let minX = Math.min(...puntosParaGraficar.map(p => p.x));
+                let maxX = Math.max(...puntosParaGraficar.map(p => p.x));
+                let minY = Math.min(...puntosParaGraficar.map(p => p.y));
+                let maxY = Math.max(...puntosParaGraficar.map(p => p.y));
 
-            ggbApplet.setCoordSystem(minX - 3, maxX + 3, minY - 3, maxY + 3);
+                ggbApplet.setCoordSystem(minX - 3, maxX + 3, minY - 3, maxY + 3);
             }
         }
     };
