@@ -9,14 +9,14 @@ namespace TabajoAnalisisMatematico.Controllers
     public class TrapeciosController : Controller
     {
         [HttpGet]
-        public IActionResult Trapecio()
+        public IActionResult TrapecioSimple()
         {
             var modelo = new IntegracionSimple();
             return View(modelo);
         }
         
         [HttpPost]
-        public IActionResult TrapecioSimple(IntegracionSimple modelo, string PuntosCargadosOcultos)
+        public IActionResult TrapecioSimple(IntegracionSimple modelo)
         {
             if (ModelState.IsValid)
             {
@@ -28,15 +28,21 @@ namespace TabajoAnalisisMatematico.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.ErrorMessage = ex.Message;
+                    modelo.MensajeError = ex.Message;
                 }
             }
 
             return View(modelo);
         }
+        [HttpGet]
+        public IActionResult TrapecioMultiple()
+        {
+            var modelo = new IntegracionMultiple();
+            return View(modelo);
+        }
 
         [HttpPost]
-        public IActionResult TrapecioMultiple(IntegracionMultiple modelo, string PuntosCargadosOcultos)
+        public IActionResult TrapecioMultiple(IntegracionMultiple modelo)
         {
             if (ModelState.IsValid)
             {
@@ -48,7 +54,7 @@ namespace TabajoAnalisisMatematico.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.ErrorMessage = ex.Message;
+                    modelo.MensajeError = ex.Message;
                 }
             }
 

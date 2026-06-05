@@ -9,7 +9,7 @@ namespace TabajoAnalisisMatematico.Controllers
     public class SimpsonController : Controller
     {
         [HttpGet]
-        public IActionResult Simpson()
+        public IActionResult Simpson13Simple()
         {
             var modelo = new IntegracionSimple();
             return View(modelo);
@@ -28,13 +28,18 @@ namespace TabajoAnalisisMatematico.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.ErrorMessage = ex.Message;
+                    modelo.MensajeError = ex.Message;
                 }
             }
 
             return View(modelo);
         }
-
+        [HttpGet]
+        public IActionResult Simpson13Multiple()
+        {
+            var modelo = new IntegracionMultiple();
+            return View(modelo);
+        }
         [HttpPost]
         public IActionResult Simpson13Multiple(IntegracionMultiple modelo, string PuntosCargadosOcultos)
         {
@@ -48,13 +53,19 @@ namespace TabajoAnalisisMatematico.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.ErrorMessage = ex.Message;
+                    modelo.MensajeError = ex.Message;
                 }
             }
 
             return View(modelo);
         }
 
+        [HttpGet]
+        public IActionResult Simpson38()
+        {
+            var modelo = new IntegracionSimple();
+            return View(modelo);
+        }
         [HttpPost]
         public IActionResult Simpson38(IntegracionSimple modelo, string PuntosCargadosOcultos)
         {
@@ -68,10 +79,16 @@ namespace TabajoAnalisisMatematico.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.ErrorMessage = ex.Message;
+                    modelo.MensajeError = ex.Message;
                 }
             }
 
+            return View(modelo);
+        }
+        [HttpGet]
+        public IActionResult SimpsonCombinado()
+        {
+            var modelo = new IntegracionMultiple();
             return View(modelo);
         }
 
@@ -88,7 +105,7 @@ namespace TabajoAnalisisMatematico.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ViewBag.ErrorMessage = ex.Message;
+                    modelo.MensajeError = ex.Message;
                 }
             }
 

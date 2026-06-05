@@ -1,0 +1,240 @@
+﻿@model IntegracionMultiple
+@{
+    Layout = null;
+    ViewData["Title"] = "Trapecio Múltiple";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+<style>
+    /* La grilla principal y el menú lateral */
+    #layoutPrincipal {
+        display: grid !important;
+        grid-template-columns: 280px 1fr;
+        gap: 20px;
+        transition: grid-template-columns 0.3s ease;
+        align-items: start;
+        min-height: 100vh;
+        background-color: #f8f9fa;
+        padding: 20px;
+    }
+
+        #layoutPrincipal.menu-cerrado {
+            grid-template-columns: 70px 1fr !important;
+        }
+
+    .menu-lateral {
+        overflow: hidden;
+        white-space: nowrap;
+        transition: padding 0.3s ease;
+    }
+
+    .menu-content {
+        transition: opacity 0.2s ease;
+        opacity: 1;
+    }
+
+    #layoutPrincipal.menu-cerrado .menu-content {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    #layoutPrincipal.menu-cerrado .menu-lateral {
+        padding: 15px 14px !important;
+    }
+
+    /* Área de trabajo (Formulario | Resultados) */
+    .content-area {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 20px;
+    }
+
+    .graph-container {
+        min-height: 500px;
+        width: 100%;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        background-color: #ffffff;
+    }
+
+    #ggb-element {
+        width: 100%;
+        height: 100%;
+    }
+</style>
+
+<div class="app-container" id="layoutPrincipal">
+
+    <div class="card p-3 shadow-sm border-0 menu-lateral" style="height: fit-content;">
+
+        <div class="d-flex justify-content-end mb-3">
+            <button type="button" class="btn btn-dark btn-sm" onclick="toggleMenu()" title="Ocultar Menú">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+        </div>
+
+        <div class="menu-content">
+            <div class="mb-3 d-flex gap-2 flex-wrap">
+                <a class="btn btn-dark btn-sm" href="/Home/Index">Unidad 1</a>
+                <a class="btn btn-dark btn-sm" href="/GaussJordan/GJ">Unidad 2</a>
+                <a class="btn btn-dark btn-sm" href="/RegresionLineal/RegresionLineal">Unidad 3</a>
+                <a class="btn btn-dark btn-sm" href="#">Unidad 4</a>
+            </div>
+            <ul class="nav nav-tabs mb-3 flex-column border-0">
+                <li class="nav-item">
+                    <a class="nav-link text-muted" href="/Trapecios/TrapecioSimple">Trapecio Simple</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active text-dark fw-bold border-bottom" href="#">Trapecio Múltiple</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted" href="/Simpson/Simpson13Simple">Simpson 1/3 Simple</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted" href="/Simpson/Simpson13Multiple">Simpson 1/3 Múltiple</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted" href="/Simpson/Simpson38">Simpson 3/8</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted" href="/Simpson/SimpsonCombinado">1/3 Múltiple y 3/8 Combinados</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="content-area">
+
+        <div class="card p-4 shadow-sm border-0" style="height: fit-content;">
+            <h4 class="text-secondary mb-4">Datos de Entrada</h4>
+
+            @if (!string.IsNullOrEmpty(Model?.MensajeError))
+            {
+                <div class="alert alert-danger py-2 shadow-sm border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@Model.MensajeError
+                </div>
+            }
+
+            <form asp-controller="Trapecios" asp-action="TrapecioMultiple" method="post">
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-0">Función</label>
+                    <input type="text" class="form-control bg-light" name="FuncionTexto" value="@Model?.Funcion" placeholder="Ej: x^2 + 2" required>
+                    <small class="text-muted">Función a integrar f(x)</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-0">Extremo Izquierdo (Xi)</label>
+                    <input type="number" step="any" class="form-control bg-light" name="Xi" value="@Model?.Xi" required>
+                    <small class="text-muted">Límite inferior de integración</small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold mb-0">Extremo Derecho (Xd)</label>
+                    <input type="number" step="any" class="form-control bg-light" name="Xd" value="@Model?.Xd" required>
+                    <small class="text-muted">Límite superior de integración</small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold mb-0">Intervalos (n)</label>
+                    <input type="number" class="form-control bg-light" name="Intervalos" value="@(Model?.N > 0 ? Model.N : 4)" min="1" required>
+                    <small class="text-muted">Cantidad de trapecios</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="background-color: #5c7cfa; border: none;">CALCULAR ÁREA</button>
+            </form>
+        </div>
+
+        <div class="d-flex flex-column gap-3">
+            @if (Model?.Resultado != null)
+            {
+                <div class="card shadow-sm border-0">
+                    <div class="card-header text-white text-center py-3" style="background-color: #343a40;">
+                        <h5 class="mb-0">Resultado de la Integración</h5>
+                    </div>
+                    <div class="card-body px-4 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-muted fs-5">Área Aproximada:</span>
+                            <span class="fs-3 fw-bold text-primary">@Model.Resultado.Value.ToString("F6")</span>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-light border text-muted shadow-sm text-center">
+                    <i class="bi bi-graph-up me-2"></i> Ingrese la función y los límites para calcular el área.
+                </div>
+            }
+
+            <div class="graph-container shadow-sm p-2">
+                <div id="ggb-element"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+<script>
+    function toggleMenu() {
+    const layout = document.getElementById('layoutPrincipal');
+    layout.classList.toggle('menu-cerrado');
+    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
+    }
+
+    // --- LÓGICA DE GEOGEBRA (CORREGIDA Y LIMPIA) ---
+    @if (Model?.Resultado != null)
+    {
+        <text>
+            document.addEventListener("DOMContentLoaded", function() {
+            const ggbContainer = document.getElementById('ggb-element');
+            if (ggbContainer) {
+
+            const funcionStr = '@Html.Raw(Model.Funcion)'.replace(/,/g, '.');
+            const a = @Model.Xi.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const b = @Model.Xd.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const n = @Model.N;
+
+            const params = {
+            "appName": "classic",
+            "width": ggbContainer.parentElement.clientWidth,
+            "height": 500,
+            "showToolBar": false,
+            "showAlgebraInput": false,
+            "showMenuBar": false,
+            "useBrowserForJS": true,
+            "language": "en",
+            "appletOnLoad": function(ggbApi) {
+            try {
+            ggbApi.evalCommand('f(x) = ' + funcionStr);
+            ggbApi.setColor('f', 33, 37, 41);
+            ggbApi.setLineThickness('f', 3);
+
+            // Dibuja múltiples trapecios
+            ggbApi.evalCommand(`AreaMultiples = TrapezoidalSum(f, ${a}, ${b}, ${n})`);
+            ggbApi.setColor('AreaMultiples', 92, 124, 250);
+            ggbApi.setFilling('AreaMultiples', 0.4);
+
+            const margenX = Math.abs(b - a) * 0.5;
+            const valA = ggbApi.getValue(`f(${a})`);
+            const valB = ggbApi.getValue(`f(${b})`);
+            const maxVal = Math.max(valA, valB, 0);
+            const minVal = Math.min(valA, valB, 0);
+            const margenY = Math.abs(maxVal - minVal) * 0.2;
+
+            ggbApi.setCoordSystem(a - margenX, b + margenX, minVal - margenY, maxVal + margenY);
+
+            } catch (error) {
+            console.error("Error graficando en GeoGebra: ", error);
+            }
+            }
+            };
+
+            const applet = new GGBApplet(params, true);
+            applet.inject('ggb-element');
+            }
+            });
+        </text>
+    }
+</script>

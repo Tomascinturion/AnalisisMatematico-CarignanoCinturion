@@ -6,5 +6,6 @@
         public double Xi { get; set; }
         public double Xd { get; set; }
         public double? Resultado { get; set; }
+        public string? MensajeError { get; set; }
     }
 }
