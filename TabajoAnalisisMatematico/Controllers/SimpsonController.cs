@@ -16,7 +16,7 @@ namespace TabajoAnalisisMatematico.Controllers
         }
         
         [HttpPost]
-        public IActionResult Simpson13Simple(IntegracionSimple modelo, string PuntosCargadosOcultos)
+        public IActionResult Simpson13Simple(IntegracionSimple modelo)
         {
             if (ModelState.IsValid)
             {
@@ -41,7 +41,7 @@ namespace TabajoAnalisisMatematico.Controllers
             return View(modelo);
         }
         [HttpPost]
-        public IActionResult Simpson13Multiple(IntegracionMultiple modelo, string PuntosCargadosOcultos)
+        public IActionResult Simpson13Multiple(IntegracionMultiple modelo)
         {
             if (ModelState.IsValid)
             {
@@ -67,7 +67,7 @@ namespace TabajoAnalisisMatematico.Controllers
             return View(modelo);
         }
         [HttpPost]
-        public IActionResult Simpson38(IntegracionSimple modelo, string PuntosCargadosOcultos)
+        public IActionResult Simpson38(IntegracionSimple modelo)
         {
             if (ModelState.IsValid)
             {
@@ -93,7 +93,7 @@ namespace TabajoAnalisisMatematico.Controllers
         }
 
         [HttpPost]
-        public IActionResult SimpsonCombinado(IntegracionMultiple modelo, string PuntosCargadosOcultos)
+        public IActionResult SimpsonCombinado(IntegracionMultiple modelo)
         {
             if (ModelState.IsValid)
             {
