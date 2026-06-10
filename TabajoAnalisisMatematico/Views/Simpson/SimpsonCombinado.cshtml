@@ -124,13 +124,13 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-bold mb-0">Extremo Izquierdo (Xi)</label>
-                    <input type="number" step="any" class="form-control bg-light" name="Xi" value="@Model?.Xi" required>
+                    <input type="text" step="any" class="form-control bg-light" name="Xi" value="@Model?.Xi" required>
                     <small class="text-muted">Límite inferior de integración</small>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-bold mb-0">Extremo Derecho (Xd)</label>
-                    <input type="number" step="any" class="form-control bg-light" name="Xd" value="@Model?.Xd" required>
+                    <input type="text" step="any" class="form-control bg-light" name="Xd" value="@Model?.Xd" required>
                     <small class="text-muted">Límite superior de integración</small>
                 </div>
 
@@ -183,7 +183,7 @@
     setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
     }
 
-    // --- LÓGICA DE GEOGEBRA (COMBINADO) ---
+    // --- LÓGICA DE GEOGEBRA (COMBINADO CON TIJERA Y ZOOM CORREGIDO) ---
     @if (Model?.Resultado != null)
     {
         <text>
@@ -224,21 +224,21 @@
             let x2 = start38 + 2 * h;
             let x3 = b;
 
-            ggbApi.evalCommand(`P38_0 = (${start38}, f(${start38}))`);
-            ggbApi.evalCommand(`P38_1 = (${x1}, f(${x1}))`);
-            ggbApi.evalCommand(`P38_2 = (${x2}, f(${x2}))`);
-            ggbApi.evalCommand(`P38_3 = (${x3}, f(${x3}))`);
+            ggbApi.evalCommand(`PA38 = (${start38}, f(${start38}))`);
+            ggbApi.evalCommand(`PB38 = (${x1}, f(${x1}))`);
+            ggbApi.evalCommand(`PC38 = (${x2}, f(${x2}))`);
+            ggbApi.evalCommand(`PD38 = (${x3}, f(${x3}))`);
 
-            ggbApi.evalCommand('Poly38 = Polynomial({P38_0, P38_1, P38_2, P38_3})');
+            // CORRECCIÓN 1: Envolvemos el polinomio en Function() para acotarlo
+            ggbApi.evalCommand(`Poly38 = Function(Polynomial({PA38, PB38, PC38, PD38}), ${start38}, ${x3})`);
             ggbApi.setVisible('Poly38', false);
 
             ggbApi.evalCommand(`Area38 = Integral(Poly38, ${start38}, ${x3})`);
-            // Pintamos de color verde esmeralda para diferenciar
-            ggbApi.setColor('Area38', 32, 201, 151);
+            ggbApi.setColor('Area38', 32, 201, 151); // Verde Esmeralda
             ggbApi.setFilling('Area38', 0.5);
 
-            ggbApi.showLabel('P38_0', false); ggbApi.showLabel('P38_1', false);
-            ggbApi.showLabel('P38_2', false); ggbApi.showLabel('P38_3', false);
+            ggbApi.showLabel('PA38', false); ggbApi.showLabel('PB38', false);
+            ggbApi.showLabel('PC38', false); ggbApi.showLabel('PD38', false);
             ggbApi.showLabel('Area38', false);
             }
 
@@ -248,27 +248,32 @@
             let x1 = a + ((i + 1) * h);
             let x2 = a + ((i + 2) * h);
 
-            ggbApi.evalCommand(`Pt0_${i} = (${x0}, f(${x0}))`);
-            ggbApi.evalCommand(`Pt1_${i} = (${x1}, f(${x1}))`);
-            ggbApi.evalCommand(`Pt2_${i} = (${x2}, f(${x2}))`);
+            ggbApi.evalCommand(`P${i} = (${x0}, f(${x0}))`);
+            ggbApi.evalCommand(`Q${i} = (${x1}, f(${x1}))`);
+            ggbApi.evalCommand(`R${i} = (${x2}, f(${x2}))`);
 
-            ggbApi.evalCommand(`Poly_${i}(x) = Polynomial({Pt0_${i}, Pt1_${i}, Pt2_${i}})`);
-            ggbApi.setVisible(`Poly_${i}`, false);
+            // CORRECCIÓN 2: Envolvemos cada parábola en Function() para acotarla
+            ggbApi.evalCommand(`Poly${i} = Function(Polynomial({P${i}, Q${i}, R${i}}), ${x0}, ${x2})`);
+            ggbApi.setVisible(`Poly${i}`, false);
 
-            ggbApi.evalCommand(`Area_${i} = Integral(Poly_${i}, ${x0}, ${x2})`);
-            ggbApi.setColor(`Area_${i}`, 92, 124, 250); // Azul clásico
-            ggbApi.setFilling(`Area_${i}`, 0.4);
+            ggbApi.evalCommand(`Area${i} = Integral(Poly${i}, ${x0}, ${x2})`);
+            ggbApi.setColor(`Area${i}`, 92, 124, 250); // Azul
+            ggbApi.setFilling(`Area${i}`, 0.4);
 
-            ggbApi.showLabel(`Pt0_${i}`, false); ggbApi.showLabel(`Pt1_${i}`, false);
-            ggbApi.showLabel(`Pt2_${i}`, false); ggbApi.showLabel(`Area_${i}`, false);
+            ggbApi.showLabel(`P${i}`, false); ggbApi.showLabel(`Q${i}`, false);
+            ggbApi.showLabel(`R${i}`, false); ggbApi.showLabel(`Area${i}`, false);
             }
 
-            // 4. Auto-Zoom
-            const margenX = Math.abs(b - a) * 0.5;
+            // 4. Auto-Zoom (CORRECCIÓN 3: Agregamos el punto medio para asegurar la altura)
+            const m = (a + b) / 2; // Punto medio
             const valA = ggbApi.getValue(`f(${a})`);
             const valB = ggbApi.getValue(`f(${b})`);
-            const maxVal = Math.max(valA, valB, 0);
-            const minVal = Math.min(valA, valB, 0);
+            const valM = ggbApi.getValue(`f(${m})`); // Evaluamos el centro
+
+            const maxVal = Math.max(valA, valB, valM, 0);
+            const minVal = Math.min(valA, valB, valM, 0);
+
+            const margenX = Math.abs(b - a) * 0.1; // Margen X más ajustado
             const margenY = Math.abs(maxVal - minVal) * 0.2;
 
             ggbApi.setCoordSystem(a - margenX, b + margenX, minVal - margenY, maxVal + margenY);
