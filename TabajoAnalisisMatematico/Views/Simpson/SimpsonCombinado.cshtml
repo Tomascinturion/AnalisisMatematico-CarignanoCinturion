@@ -183,15 +183,160 @@
     setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
     }
 
-    // --- LÓGICA DE GEOGEBRA (COMBINADO CON TIJERA Y ZOOM CORREGIDO) ---
+    function adaptarFuncionParaGeoGebra(funcion) {
+    if (!funcion) return funcion;
+
+    return funcion
+    // Calculus interpreta log(x) como ln(x).
+    // GeoGebra interpreta log(x) como logaritmo base 10.
+    .replace(/\blog\s*\(/gi, 'ln(');
+    }
+
+    function numeroGeoGebra(valor) {
+    return Number(valor).toFixed(12).replace(/\.?0+$/, '');
+    }
+
+    function ocultarEnVista(ggbApi, nombreObjeto) {
+    try {
+    ggbApi.evalCommand(`SetVisibleInView(${nombreObjeto}, 1, false)`);
+    ggbApi.showLabel(nombreObjeto, false);
+    } catch (error) {
+    console.warn(`No se pudo ocultar ${nombreObjeto}:`, error);
+    }
+    }
+
+    function dibujarBloquesSimpson13(ggbApi, a, h, limite13) {
+    // Simpson 1/3 usa bloques de 2 subintervalos.
+    // Si limite13 = 6, genera bloques i = 0, 2, 4.
+    for (let i = 0; limite13 - 2 >= i; i += 2) {
+    const x0 = a + i * h;
+    const x1 = a + (i + 1) * h;
+    const x2 = a + (i + 2) * h;
+
+    const x0g = numeroGeoGebra(x0);
+    const x1g = numeroGeoGebra(x1);
+    const x2g = numeroGeoGebra(x2);
+
+    try {
+    ggbApi.evalCommand(`P13_${i} = (${x0g}, f(${x0g}))`);
+    ggbApi.evalCommand(`Q13_${i} = (${x1g}, f(${x1g}))`);
+    ggbApi.evalCommand(`R13_${i} = (${x2g}, f(${x2g}))`);
+
+    ggbApi.evalCommand(`Poly13_${i}(x) = Polynomial({P13_${i}, Q13_${i}, R13_${i}})`);
+
+    ggbApi.evalCommand(`Area13_${i} = Integral(Poly13_${i}, ${x0g}, ${x2g})`);
+
+    ggbApi.setColor(`Area13_${i}`, 92, 124, 250);
+    ggbApi.setFilling(`Area13_${i}`, 0.4);
+
+    ggbApi.setColor(`Poly13_${i}`, 220, 53, 69);
+    ggbApi.setLineThickness(`Poly13_${i}`, 2);
+
+    // Ocultar la parábola auxiliar y los puntos.
+    // Queda visible solamente el área.
+    ocultarEnVista(ggbApi, `Poly13_${i}`);
+    ocultarEnVista(ggbApi, `P13_${i}`);
+    ocultarEnVista(ggbApi, `Q13_${i}`);
+    ocultarEnVista(ggbApi, `R13_${i}`);
+
+    ggbApi.showLabel(`Area13_${i}`, false);
+
+    console.log(`Bloque Simpson 1/3 dibujado: Area13_${i}, desde ${x0g} hasta ${x2g}`);
+    }
+    catch (errorBloque13) {
+    console.error(`Error dibujando bloque Simpson 1/3 i=${i}:`, errorBloque13);
+    }
+    }
+    }
+
+    function dibujarBloqueSimpson38(ggbApi, a, b, h, limite13) {
+    const start38 = a + limite13 * h;
+    const x1 = start38 + h;
+    const x2 = start38 + 2 * h;
+    const x3 = b;
+
+    const x0g = numeroGeoGebra(start38);
+    const x1g = numeroGeoGebra(x1);
+    const x2g = numeroGeoGebra(x2);
+    const x3g = numeroGeoGebra(x3);
+
+    try {
+    ggbApi.evalCommand(`P38 = (${x0g}, f(${x0g}))`);
+    ggbApi.evalCommand(`Q38 = (${x1g}, f(${x1g}))`);
+    ggbApi.evalCommand(`R38 = (${x2g}, f(${x2g}))`);
+    ggbApi.evalCommand(`S38 = (${x3g}, f(${x3g}))`);
+
+    ggbApi.evalCommand(`Poly38(x) = Polynomial({P38, Q38, R38, S38})`);
+
+    ggbApi.evalCommand(`Area38 = Integral(Poly38, ${x0g}, ${x3g})`);
+
+    ggbApi.setColor(`Area38`, 32, 201, 151);
+    ggbApi.setFilling(`Area38`, 0.5);
+
+    ggbApi.setColor(`Poly38`, 220, 53, 69);
+    ggbApi.setLineThickness(`Poly38`, 2);
+
+    // Ocultar la cúbica auxiliar y los puntos.
+    // Queda visible solamente el área.
+    ocultarEnVista(ggbApi, `Poly38`);
+    ocultarEnVista(ggbApi, `P38`);
+    ocultarEnVista(ggbApi, `Q38`);
+    ocultarEnVista(ggbApi, `R38`);
+    ocultarEnVista(ggbApi, `S38`);
+
+    ggbApi.showLabel(`Area38`, false);
+
+    console.log(`Bloque Simpson 3/8 dibujado: Area38, desde ${x0g} hasta ${x3g}`);
+    }
+    catch (errorBloque38) {
+    console.error("Error dibujando bloque Simpson 3/8:", errorBloque38);
+    }
+    }
+
+    function aplicarZoomAutomatico(ggbApi, a, b, n) {
+    const h = (b - a) / n;
+
+    let minY = 0;
+    let maxY = 0;
+
+    for (let i = 0; n >= i; i++) {
+    const x = a + i * h;
+    const xg = numeroGeoGebra(x);
+    const y = ggbApi.getValue(`f(${xg})`);
+
+    if (!isNaN(y) && isFinite(y)) {
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+    }
+    }
+
+    const margenX = Math.abs(b - a) * 0.15 || 1;
+
+    let margenY = Math.abs(maxY - minY) * 0.25;
+    if (margenY === 0) {
+    margenY = 1;
+    }
+
+    ggbApi.setCoordSystem(
+    a - margenX,
+    b + margenX,
+    minY - margenY,
+    maxY + margenY
+    );
+    }
+
+    // --- LÓGICA DE GEOGEBRA: SIMPSON COMBINADO ---
     @if (Model?.Resultado != null)
     {
         <text>
-            document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("DOMContentLoaded", function () {
             const ggbContainer = document.getElementById('ggb-element');
+
             if (ggbContainer) {
 
-            const funcionStr = '@Html.Raw(Model.Funcion)'.replace(/,/g, '.');
+            const funcionOriginal = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Funcion ?? ""));
+            const funcionStr = adaptarFuncionParaGeoGebra(funcionOriginal.replace(/,/g, '.'));
+
             const a = @Model.Xi.ToString(System.Globalization.CultureInfo.InvariantCulture);
             const b = @Model.Xd.ToString(System.Globalization.CultureInfo.InvariantCulture);
             const n = parseInt('@Model.N');
@@ -205,81 +350,45 @@
             "showMenuBar": false,
             "useBrowserForJS": true,
             "language": "en",
-            "appletOnLoad": function(ggbApi) {
+
+            "appletOnLoad": function (ggbApi) {
             try {
-            // 1. Dibujar la función real
+            // 1. Dibujar la función original
             ggbApi.evalCommand('f(x) = ' + funcionStr);
             ggbApi.setColor('f', 33, 37, 41);
             ggbApi.setLineThickness('f', 3);
 
+            // 2. Validar N
+            if (isNaN(n) || !(n >= 2)) {
+            console.error("Simpson combinado requiere N mayor o igual a 2.");
+            return;
+            }
+
             const h = (b - a) / n;
+
+            // 3. Determinar hasta dónde va Simpson 1/3
             let limite13 = n;
 
-            // 2. Si es impar, separamos los últimos 3 intervalos para Simpson 3/8
+            // Si N es impar, los últimos 3 subintervalos se resuelven con Simpson 3/8.
             if (n % 2 !== 0) {
             limite13 = n - 3;
 
-            let start38 = a + (limite13 * h);
-            let x1 = start38 + h;
-            let x2 = start38 + 2 * h;
-            let x3 = b;
-
-            ggbApi.evalCommand(`PA38 = (${start38}, f(${start38}))`);
-            ggbApi.evalCommand(`PB38 = (${x1}, f(${x1}))`);
-            ggbApi.evalCommand(`PC38 = (${x2}, f(${x2}))`);
-            ggbApi.evalCommand(`PD38 = (${x3}, f(${x3}))`);
-
-            // CORRECCIÓN 1: Envolvemos el polinomio en Function() para acotarlo
-            ggbApi.evalCommand(`Poly38 = Function(Polynomial({PA38, PB38, PC38, PD38}), ${start38}, ${x3})`);
-            ggbApi.setVisible('Poly38', false);
-
-            ggbApi.evalCommand(`Area38 = Integral(Poly38, ${start38}, ${x3})`);
-            ggbApi.setColor('Area38', 32, 201, 151); // Verde Esmeralda
-            ggbApi.setFilling('Area38', 0.5);
-
-            ggbApi.showLabel('PA38', false); ggbApi.showLabel('PB38', false);
-            ggbApi.showLabel('PC38', false); ggbApi.showLabel('PD38', false);
-            ggbApi.showLabel('Area38', false);
+            // Si N = 3, limite13 queda en 0.
+            // En ese caso se dibuja solo Simpson 3/8.
+            dibujarBloqueSimpson38(ggbApi, a, b, h, limite13);
             }
 
-            // 3. Aplicamos Simpson 1/3 al resto de los intervalos
-            for (let i = 0; limite13 > i; i += 2) {
-            let x0 = a + (i * h);
-            let x1 = a + ((i + 1) * h);
-            let x2 = a + ((i + 2) * h);
-
-            ggbApi.evalCommand(`P${i} = (${x0}, f(${x0}))`);
-            ggbApi.evalCommand(`Q${i} = (${x1}, f(${x1}))`);
-            ggbApi.evalCommand(`R${i} = (${x2}, f(${x2}))`);
-
-            // CORRECCIÓN 2: Envolvemos cada parábola en Function() para acotarla
-            ggbApi.evalCommand(`Poly${i} = Function(Polynomial({P${i}, Q${i}, R${i}}), ${x0}, ${x2})`);
-            ggbApi.setVisible(`Poly${i}`, false);
-
-            ggbApi.evalCommand(`Area${i} = Integral(Poly${i}, ${x0}, ${x2})`);
-            ggbApi.setColor(`Area${i}`, 92, 124, 250); // Azul
-            ggbApi.setFilling(`Area${i}`, 0.4);
-
-            ggbApi.showLabel(`P${i}`, false); ggbApi.showLabel(`Q${i}`, false);
-            ggbApi.showLabel(`R${i}`, false); ggbApi.showLabel(`Area${i}`, false);
+            // 4. Dibujar Simpson 1/3 en el resto de los intervalos
+            if (limite13 >= 2) {
+            dibujarBloquesSimpson13(ggbApi, a, h, limite13);
             }
 
-            // 4. Auto-Zoom (CORRECCIÓN 3: Agregamos el punto medio para asegurar la altura)
-            const m = (a + b) / 2; // Punto medio
-            const valA = ggbApi.getValue(`f(${a})`);
-            const valB = ggbApi.getValue(`f(${b})`);
-            const valM = ggbApi.getValue(`f(${m})`); // Evaluamos el centro
-
-            const maxVal = Math.max(valA, valB, valM, 0);
-            const minVal = Math.min(valA, valB, valM, 0);
-
-            const margenX = Math.abs(b - a) * 0.1; // Margen X más ajustado
-            const margenY = Math.abs(maxVal - minVal) * 0.2;
-
-            ggbApi.setCoordSystem(a - margenX, b + margenX, minVal - margenY, maxVal + margenY);
+            // 5. Auto-Zoom
+            aplicarZoomAutomatico(ggbApi, a, b, n);
 
             } catch (error) {
             console.error("Error graficando en GeoGebra: ", error);
+            alert("Error graficando en GeoGebra: " + error.message);
             }
             }
             };

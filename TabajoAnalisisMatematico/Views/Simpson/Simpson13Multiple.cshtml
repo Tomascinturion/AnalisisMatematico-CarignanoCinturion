@@ -141,92 +141,166 @@
 </div>
 
 <script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+
 <script>
     function toggleMenu() {
-        const layout = document.getElementById('layoutPrincipal');
-        layout.classList.toggle('menu-cerrado');
-        setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
+    const layout = document.getElementById('layoutPrincipal');
+    layout.classList.toggle('menu-cerrado');
+    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
+    }
+
+    function adaptarFuncionParaGeoGebra(funcion) {
+    if (!funcion) return funcion;
+
+    return funcion
+    // Calculus interpreta log(x) como ln(x).
+    // GeoGebra interpreta log(x) como logaritmo base 10.
+    .replace(/\blog\s*\(/gi, 'ln(');
+    }
+
+    function numeroGeoGebra(valor) {
+    return Number(valor).toFixed(12).replace(/\.?0+$/, '');
+    }
+
+    function dibujarSimpson13Multiple(ggbApi, a, b, n) {
+    const h = (b - a) / n;
+
+    // Simpson 1/3 trabaja de a 2 subintervalos.
+    // Para n = 10, genera i = 0, 2, 4, 6, 8.
+    for (let i = 0; n - 2 >= i; i += 2) {
+    const x0 = a + i * h;
+    const x1 = a + (i + 1) * h;
+    const x2 = a + (i + 2) * h;
+
+    const x0g = numeroGeoGebra(x0);
+    const x1g = numeroGeoGebra(x1);
+    const x2g = numeroGeoGebra(x2);
+
+    try {
+    // Crear los 3 puntos del bloque de Simpson
+    ggbApi.evalCommand(`Pt0_${i} = (${x0g}, f(${x0g}))`);
+    ggbApi.evalCommand(`Pt1_${i} = (${x1g}, f(${x1g}))`);
+    ggbApi.evalCommand(`Pt2_${i} = (${x2g}, f(${x2g}))`);
+
+    ggbApi.evalCommand(`Poly_${i}(x) = Polynomial({Pt0_${i}, Pt1_${i}, Pt2_${i}})`);
+
+    ggbApi.evalCommand(`Area_${i} = Integral(Poly_${i}, ${x0g}, ${x2g})`);
+
+    ggbApi.setColor(`Area_${i}`, 92, 124, 250);
+    ggbApi.setFilling(`Area_${i}`, 0.4);
+
+    // Ocultar la parábola auxiliar de Simpson en la vista gráfica
+    ggbApi.evalCommand(`SetVisibleInView(Poly_${i}, 1, false)`);
+
+    ggbApi.showLabel(`Poly_${i}`, false);
+
+    // Estilo de la parábola
+    ggbApi.setColor(`Poly_${i}`, 220, 53, 69);
+    ggbApi.setLineThickness(`Poly_${i}`, 2);
+
+    // Ocultar etiquetas
+    ggbApi.showLabel(`Pt0_${i}`, false);
+    ggbApi.showLabel(`Pt1_${i}`, false);
+    ggbApi.showLabel(`Pt2_${i}`, false);
+    ggbApi.showLabel(`Poly_${i}`, false);
+    ggbApi.showLabel(`Area_${i}`, false);
+
+    console.log(`Bloque Simpson dibujado: Area_${i}, desde ${x0g} hasta ${x2g}`);
+    }
+    catch (errorBloque) {
+    console.error(`Error dibujando bloque Simpson i=${i}:`, errorBloque);
+    }
+    }
+    }
+
+    function aplicarZoomAutomatico(ggbApi, a, b, n) {
+    const h = (b - a) / n;
+
+    let minY = 0;
+    let maxY = 0;
+
+    for (let i = 0; n >= i; i++) {
+    const x = a + i * h;
+    const xg = numeroGeoGebra(x);
+    const y = ggbApi.getValue(`f(${xg})`);
+
+    if (!isNaN(y) && isFinite(y)) {
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+    }
+    }
+
+    const margenX = Math.abs(b - a) * 0.15 || 1;
+
+    let margenY = Math.abs(maxY - minY) * 0.25;
+    if (margenY === 0) {
+    margenY = 1;
+    }
+
+    ggbApi.setCoordSystem(
+    a - margenX,
+    b + margenX,
+    minY - margenY,
+    maxY + margenY
+    );
     }
 
     // --- LÓGICA DE GEOGEBRA (SIMPSON 1/3 MÚLTIPLE) ---
     @if (Model?.Resultado != null)
     {
         <text>
-        document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("DOMContentLoaded", function () {
             const ggbContainer = document.getElementById('ggb-element');
+
             if (ggbContainer) {
 
-                const funcionStr = '@Html.Raw(Model.Funcion)'.replace(/,/g, '.');
-                const a = @Model.Xi.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                const b = @Model.Xd.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                const n = parseInt('@Model.N'); 
+            const funcionOriginal = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Funcion ?? ""));
+            const funcionStr = adaptarFuncionParaGeoGebra(funcionOriginal.replace(/,/g, '.'));
 
-                const params = {
-                    "appName": "classic",
-                    "width": ggbContainer.parentElement.clientWidth,
-                    "height": 500,
-                    "showToolBar": false,
-                    "showAlgebraInput": false,
-                    "showMenuBar": false,
-                    "useBrowserForJS": true,
-                    "language": "en",
-                    "appletOnLoad": function(ggbApi) {
-                        try {
-                            // 1. Dibujar la función real f(x)
-                            ggbApi.evalCommand('f(x) = ' + funcionStr);
-                            ggbApi.setColor('f', 33, 37, 41);
-                            ggbApi.setLineThickness('f', 3);
+            const a = @Model.Xi.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const b = @Model.Xd.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            const n = parseInt('@Model.N');
 
-                            // 2. Calcular el salto (h) entre intervalos
-                            const h = (b - a) / n;
+            const params = {
+            "appName": "classic",
+            "width": ggbContainer.parentElement.clientWidth,
+            "height": 500,
+            "showToolBar": false,
+            "showAlgebraInput": false,
+            "showMenuBar": false,
+            "useBrowserForJS": true,
+            "language": "en",
 
-                            // 3. CICLO MÁGICO: Dibuja una parábola cada 2 sub-intervalos
-                            for (let i = 0; n > i; i += 2) {
-                                let x0 = a + (i * h);
-                                let x1 = a + ((i + 1) * h);
-                                let x2 = a + ((i + 2) * h);
+            "appletOnLoad": function (ggbApi) {
+            try {
+            // 1. Dibujar la función original
+            ggbApi.evalCommand('f(x) = ' + funcionStr);
+            ggbApi.setColor('f', 33, 37, 41);
+            ggbApi.setLineThickness('f', 3);
 
-                                // Marcar los 3 puntos del sub-intervalo
-                                ggbApi.evalCommand(`Pt0_${i} = (${x0}, f(${x0}))`);
-                                ggbApi.evalCommand(`Pt1_${i} = (${x1}, f(${x1}))`);
-                                ggbApi.evalCommand(`Pt2_${i} = (${x2}, f(${x2}))`);
-
-                                // Crear la parábola para este segmento
-                                ggbApi.evalCommand(`Poly_${i}(x) = Polynomial({Pt0_${i}, Pt1_${i}, Pt2_${i}})`);
-                                ggbApi.setVisible(`Poly_${i}`, false);
-
-                                // Pintar el área bajo esa parábola
-                                ggbApi.evalCommand(`Area_${i} = Integral(Poly_${i}, ${x0}, ${x2})`);
-                                ggbApi.setColor(`Area_${i}`, 92, 124, 250); 
-                                ggbApi.setFilling(`Area_${i}`, 0.4); 
-
-                                // Ocultar basura visual
-                                ggbApi.showLabel(`Pt0_${i}`, false);
-                                ggbApi.showLabel(`Pt1_${i}`, false);
-                                ggbApi.showLabel(`Pt2_${i}`, false);
-                                ggbApi.showLabel(`Area_${i}`, false);
-                            }
-
-                            // 4. Auto-Zoom
-                            const margenX = Math.abs(b - a) * 0.5;
-                            const valA = ggbApi.getValue(`f(${a})`);
-                            const valB = ggbApi.getValue(`f(${b})`);
-                            const maxVal = Math.max(valA, valB, 0);
-                            const minVal = Math.min(valA, valB, 0);
-                            const margenY = Math.abs(maxVal - minVal) * 0.2;
-
-                            ggbApi.setCoordSystem(a - margenX, b + margenX, minVal - margenY, maxVal + margenY);
-
-                        } catch (error) {
-                            console.error("Error graficando en GeoGebra: ", error);
-                        }
-                    }
-                };
-
-                const applet = new GGBApplet(params, true);
-                applet.inject('ggb-element');
+            // 2. Validar n
+            if (isNaN(n) || !(n >= 2) || n % 2 !== 0) {
+            console.error("Simpson 1/3 múltiple requiere un n par y mayor o igual a 2.");
+            return;
             }
-        });
+
+            // 3. Dibujar todos los bloques de Simpson
+            dibujarSimpson13Multiple(ggbApi, a, b, n);
+
+            // 4. Auto-Zoom
+            aplicarZoomAutomatico(ggbApi, a, b, n);
+
+            } catch (error) {
+            console.error("Error graficando en GeoGebra: ", error);
+            alert("Error graficando en GeoGebra: " + error.message);
+            }
+            }
+            };
+
+            const applet = new GGBApplet(params, true);
+            applet.inject('ggb-element');
+            }
+            });
         </text>
     }
 </script>
