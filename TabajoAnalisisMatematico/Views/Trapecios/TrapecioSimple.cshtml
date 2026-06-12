@@ -179,6 +179,14 @@
     layout.classList.toggle('menu-cerrado');
     setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
     }
+    function adaptarFuncionParaGeoGebra(funcion) {
+    if (!funcion) return funcion;
+
+    return funcion
+    // Calculus interpreta log(x) como ln(x).
+    // GeoGebra interpreta log(x) como logaritmo base 10.
+    .replace(/\blog\s*\(/gi, 'ln(');
+    }
 
     // --- LÓGICA DE GEOGEBRA (LIMPIA) ---
     @if (Model?.Resultado != null)
@@ -188,6 +196,8 @@
             const ggbContainer = document.getElementById('ggb-element');
             if (ggbContainer) {
 
+            const funcionOriginal = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Funcion ?? ""));
+            const funcionStr = adaptarFuncionParaGeoGebra(funcionOriginal.replace(/,/g, '.'));
             const funcionStr = '@Html.Raw(Model.Funcion)'.replace(/,/g, '.');
             const a = @Model.Xi.ToString(System.Globalization.CultureInfo.InvariantCulture);
             const b = @Model.Xd.ToString(System.Globalization.CultureInfo.InvariantCulture);
